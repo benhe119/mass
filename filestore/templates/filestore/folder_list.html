@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+  <h1>Folders</h1>
+
+  <p><a href="{% url 'folder-create' %}">Add Folder</a></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Path</th>
+        <th>Number of Files</th>
+        <th>Number of Files Added</th>
+        <th>Recursive</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for folder in folders %}
+        <tr>
+          <td><a href="{% url 'folder-detail' folder.pk %}">{{ folder.path }}</a></td>
+          <td>{{ folder.num_files }}</td>
+          <td>{{ folder.num_files_added }}</td>
+          <td>{{ folder.recursive }}</td>
+          <td>Delete</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td>No files</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

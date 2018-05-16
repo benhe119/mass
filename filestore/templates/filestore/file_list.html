@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+  <h1>Files</h1>
+
+  <p><a href="{% url 'file-create' %}">Add File</a></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Filename</th>
+        <th>Size</th>
+        <th>SHA256</th>
+        <th>Added</th>
+        <th>Proc. Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for file in files %}
+        <tr>
+          <td><a href="{% url 'file-detail' file.sha256 %}">{{ file.file_name }}</a></td>
+          <td>{{ file.size|filesizeformat }}</td>
+          <td>{{ file.sha256|truncatechars:15 }}</td>
+          <td>{{ file.added|date:"Y-m-d H:i:s" }}</td>
+          <td>{{ file.time_to_process }} ms</td>
+          <td>Delete</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td>No files</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

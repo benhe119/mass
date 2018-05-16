@@ -1,0 +1,28 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% block title %}<title>MASS</title>{% endblock %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body>
+
+  <div >
+
+    <div>
+      <div>
+      {% block sidebar %}
+      <ul>
+          <li><a href="{% url 'file-list' %}">Files</a></li>
+          <li><a href="{% url 'folder-list' %}">Folders</a></li>
+      </ul>
+     {% endblock %}
+      </div>
+      <div>
+      {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

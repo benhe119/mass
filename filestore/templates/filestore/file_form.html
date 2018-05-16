@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p>
+  <form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+	  <div>
+	    <div>
+	      <label for="{{ form.file_obj.id_for_label }}">Choose File</label>
+	      {{ form.file_obj }}
+	    </div>
+	  </div>
+	  <button type="submit">Upload</button>
+  </form>
+</p>
+{% endblock %}
