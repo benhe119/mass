@@ -4,11 +4,13 @@ services:
   web:
     build:
       context: .
-    command: ./run_web.sh
+    command: ./run_prod.sh
     volumes:
       - .:/app
     ports:
       - "8000:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: mass.settings.prod
   redis:
     image: redis
     ports:

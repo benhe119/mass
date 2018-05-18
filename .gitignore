@@ -6,3 +6,4 @@ files/
 .coverage
 .idea
 .state
+bro/tmp

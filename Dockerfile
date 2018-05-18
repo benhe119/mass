@@ -12,6 +12,4 @@ ADD . /app
 
 WORKDIR /app/
 
-RUN mkdir -p /var/lib/bro
-
 RUN pip install -r requirements.txt

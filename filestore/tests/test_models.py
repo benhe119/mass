@@ -3,7 +3,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from pathlib import Path
-import shutil
 from filestore.models import File, Folder
 
 
@@ -14,6 +13,7 @@ def rmdir(dir):
             item.rmdir()
         else:
             item.unlink()
+
 
 class FileTests(TestCase):
 

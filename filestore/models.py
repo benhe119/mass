@@ -77,6 +77,7 @@ class Folder(models.Model):
     num_files = models.PositiveIntegerField(editable=False, default=0)
     num_files_added = models.PositiveIntegerField(editable=False, default=0)
     recursive = models.BooleanField(default=False)
+    temporary = models.BooleanField(default=False, editable=False)
 
     class Meta:
         unique_together = (('path', 'recursive'),)
