@@ -3,35 +3,44 @@
 {% load static %}
 
 {% block content %}
-  <h1>Files</h1>
-
-  <p><a href="{% url 'file-create' %}">Add File</a></p>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Filename</th>
-        <th>Size</th>
-        <th>SHA256</th>
-        <th>Added</th>
-        <th>Proc. Time</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for file in files %}
+<form action="{% url 'file-list' %}" method="post">
+  {% csrf_token %}
+  <section class="section">
+    <h1 class="title">Files</h1>
+    <p><a class="button" href="{% url 'file-create' %}">Add File</a></p>
+    {% if files %}
+    <table class="table is-narrow is-hoverable">
+      <thead>
         <tr>
-          <td><a href="{% url 'file-detail' file.sha256 %}">{{ file.file_name }}</a></td>
-          <td>{{ file.size|filesizeformat }}</td>
-          <td>{{ file.sha256|truncatechars:15 }}</td>
-          <td>{{ file.added|date:"Y-m-d H:i:s" }}</td>
-          <td>{{ file.time_to_process }} ms</td>
-          <td>Delete</td>
+          <th></th>
+          <th>Filename</th>
+          <th>Size</th>
+          <th>SHA256</th>
+          <th>Added</th>
+          <th>Proc. Time</th>
         </tr>
-      {% empty %}
-        <tr>
-          <td>No files</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {% for file in files %}
+          <tr>
+            <td><input type="checkbox" value="{{ file.id }}" name="selected_files"></td>
+            <td><a href="{% url 'file-detail' file.sha256 %}">{{ file.file_name }}</a></td>
+            <td>{{ file.size|filesizeformat }}</td>
+            <td>{{ file.sha256|truncatechars:15 }}</td>
+            <td>{{ file.added|date:"Y-m-d H:i:s" }}</td>
+            <td>{{ file.time_to_process }} ms</td>
+            <td><span class="icon has-text-danger">
+                  <i class="fas fa-ban"></i>
+                </span>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button class="button is-danger">Delete</button>
+    {% else %}
+      <p>No Files</p>
+    {% endif %}
+  </section>
+  </form>
 {% endblock %}

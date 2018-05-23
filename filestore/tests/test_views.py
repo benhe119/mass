@@ -6,7 +6,9 @@ from django.test import TestCase
 from django.urls import reverse
 from filestore.models import File, Folder
 
-
+# TODO: improve views.py and tasks.py coverage
+# TODO: reduce reliance on files already present, i.e. create and delete
+#       files/folders in the tests
 class FileViewTests(TestCase):
 
     def test_file_list_view(self):

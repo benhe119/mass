@@ -4,25 +4,31 @@
   {% block title %}<title>MASS</title>{% endblock %}
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css"
+    integrity="sha256-zIG416V1ynj3Wgju/scU80KAEWOsO5rRLfVyRDuOv7Q=" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css"
+    integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+
 </head>
 
 <body>
-
-  <div >
-
-    <div>
-      <div>
-      {% block sidebar %}
-      <ul>
-          <li><a href="{% url 'file-list' %}">Files</a></li>
-          <li><a href="{% url 'folder-list' %}">Folders</a></li>
-      </ul>
-     {% endblock %}
-      </div>
-      <div>
-      {% block content %}{% endblock %}
+  <div class="navbar-menu">
+    <div class="navbar-start">
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          MASS
+        </a>
+        <div class="navbar-dropdown is-boxed">
+          <a class="navbar-item" href="{% url 'file-list' %}">
+            Files
+          </a>
+          <a class="navbar-item" href="{% url 'folder-list' %}">
+            Folders
+          </a>
+        </div>
       </div>
     </div>
   </div>
+  {% block content %}{% endblock %}
 </body>
 </html>
