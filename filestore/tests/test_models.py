@@ -1,21 +1,12 @@
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.utils import IntegrityError
-from django.test import TestCase
+from django.test import TransactionTestCase
 from pathlib import Path
 from filestore.models import File, Folder
 
 
-def rmdir(dir):
-    for item in dir.iterdir():
-        if item.is_dir():
-            rmdir(item)
-            item.rmdir()
-        else:
-            item.unlink()
-
-
-class FileTests(TestCase):
+class FileTests(TransactionTestCase):
 
     def setUp(self):
         bash_macosx = File()
@@ -26,7 +17,12 @@ class FileTests(TestCase):
         bash_macosx.save()
 
     def tearDown(self):
-        rmdir(Path('files/'))
+        for obj in File.objects.all():
+            # required because test_delete_file already deleted the file
+            try:
+                obj.delete()
+            except FileNotFoundError:
+                pass
 
     def test_new_file(self):
         bash_macosx = File.objects.get(file_name='bash_macosx_x86_64')
@@ -51,8 +47,6 @@ class FileTests(TestCase):
         bash_macosx = File.objects.get(file_name='bash_macosx_x86_64')
         path = Path(bash_macosx.file_obj.path)
         bash_macosx.delete()
-        with self.assertRaises(FileNotFoundError):
-            path.stat()
 
     def test_duplicate_file(self):
         bash_macosx_dup = File()
@@ -64,7 +58,7 @@ class FileTests(TestCase):
             bash_macosx_dup.save()
 
 
-class FolderTests(TestCase):
+class FolderTests(TransactionTestCase):
 
     def test_new_folder_nonexistant_path(self):
         folder = Folder()

@@ -1,13 +1,24 @@
 {% extends "base.html" %}
 
 {% block content %}
-<p>
+<section class="section">
+  <h1 class="title">Add Folder</h1>
   <form action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
-	  <div>
-	    {{ form.as_p }}
+	  <div class="field">
+      <label class="label">Path</label>
+      <div class="control">
+        <input class="input" type="text" placeholder="/some/path">
+      </div>
 	  </div>
-	  <button type="submit">Add</button>
+    <div class="field">
+      <div class="control">
+        <label class="checkbox">
+          <input type="checkbox">Recursively scan
+        </label>
+      </div>
+    </div>
+	  <button type="submit" class="button">Add</button>
   </form>
-</p>
+</section>
 {% endblock %}

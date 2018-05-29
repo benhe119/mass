@@ -29,10 +29,6 @@
             <td>{{ file.sha256|truncatechars:15 }}</td>
             <td>{{ file.added|date:"Y-m-d H:i:s" }}</td>
             <td>{{ file.time_to_process }} ms</td>
-            <td><span class="icon has-text-danger">
-                  <i class="fas fa-ban"></i>
-                </span>
-            </td>
           </tr>
         {% endfor %}
       </tbody>

@@ -21,9 +21,8 @@ class FileList(ListView):
         return super().get_context_data(**kwargs)
 
     def post(self, request, *args, **kwargs):
-        print(request.POST.getlist('selected_files'))
-        qs = File.objects.filter(pk__in=request.POST.getlist('selected_files'))
-        qs.delete()
+        for obj in File.objects.filter(pk__in=request.POST.getlist('selected_files')):
+            obj.delete()
         return render(request, self.template_name, self.get_context_data())
 
 
@@ -58,9 +57,8 @@ class FolderList(ListView):
         return super().get_context_data(**kwargs)
 
     def post(self, request, *args, **kwargs):
-        print(request.POST.getlist('selected_folders'))
-        qs = Folder.objects.filter(pk__in=request.POST.getlist('selected_folders'))
-        qs.delete()
+        for obj in Folder.objects.filter(pk__in=request.POST.getlist('selected_folders')):
+            obj.delete()
         return render(request, self.template_name, self.get_context_data())
 
 

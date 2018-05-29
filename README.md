@@ -1,0 +1,6 @@
+- TODO: improve views.py and tasks.py coverage
+- TODO: reduce reliance on files already present, i.e. create and delete files/folders in the tests
+- TODO: make a temp path and us os/pathlib to manage dirs when extracting PCAPs
+- TODO: add test_forms.py
+- TODO: determine why "from .tasks import extract_pcap, scan_folder" is necessary in views.py
+- TODO: set up supervisord to handle rqworker

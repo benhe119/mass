@@ -1,7 +1,6 @@
 version: '3'
 
 services:
-  # TODO: set up supervisord to handle rqworker
   web:
     build:
       context: .

@@ -1,15 +1,31 @@
 from datetime import datetime as dt
 import hashlib
+import logging
 from pathlib import Path
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.utils import IntegrityError
 from django.urls import reverse
 import magic
+
+logger = logging.getLogger(__name__)
 
 
 def get_upload_path(instance, filename):
     return 'files/{}/{}/{}'.format(
         instance.sha256[0:2], instance.sha256[2:4], instance.sha256)
+
+def delete_file_empty_dirs(path):
+    path = Path(path)
+    path.unlink()
+    for f in path.parent.glob('*_*'):
+        f.unlink()
+    if sum(1 for f in path.parents[0].iterdir()) == 0:
+        logger.info(f'Deleting empty dir {path.parents[0]}')
+        path.parents[0].rmdir()
+        if sum(1 for f in path.parents[1].iterdir()) == 0:
+            logger.info(f'Deleting empty dir {path.parents[1]}')
+            path.parents[1].rmdir()
 
 
 class File(models.Model):
@@ -34,17 +50,16 @@ class File(models.Model):
             self.md5, self.sha1, self.sha256, self.file_type = self.get_file_info(file_handle)
             self.time_to_process = int((dt.now() - _proc_start).total_seconds() * 1000)
             self.path = get_upload_path(self, None)
-        super().save(*args, **kwargs)
+            logger.info(f'Saved new file: "{self.file_name}" ({self.size:,} B) to {self.path}')
+        try:
+            super().save(*args, **kwargs)
+        except IntegrityError:
+            delete_file_empty_dirs(self.path)
+            raise
 
     def delete(self, *args, **kwargs):
-        path = Path(self.file_obj.path)
-        try:
-            path.unlink()
-            path.parent.rmdir()
-        except FileNotFoundError:
-            pass
-        finally:
-            super().delete(*args, **kwargs)
+        delete_file_empty_dirs(self.path)
+        super().delete(*args, **kwargs)
 
     @staticmethod
     def get_file_info(file_obj):

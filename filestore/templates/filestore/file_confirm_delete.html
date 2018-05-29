@@ -1,13 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<p>
+<section class="section">
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-	  <div>
-	      {{ file }}
-	  </div>
-	  <button type="submit">Confirm</button>
+	  <div>Are you sure you want to delete {{ file }}?</div>
+	  <button type="submit" class="button is-danger">Confirm</button>
   </form>
-</p>
+</section>
 {% endblock %}

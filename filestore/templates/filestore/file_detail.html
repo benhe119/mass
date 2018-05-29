@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<table>
+<section class="section">
+<table class="table is-narrow is-hoverable">
   <tr>
     <td>File Name:</td>
     <td>{{ file.file_name }}</td>
@@ -36,4 +37,5 @@
   </tr>
 </table>
 <a href="{% url 'file-delete' file.sha256 %}">Delete</a>
+</section>
 {% endblock %}

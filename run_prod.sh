@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 export DJANGO_SETTINGS_MODULE=mass.settings.prod
+service supervisor start
 rm -rf mass/db.sqlite3
 rm -rf files/*
 rm -rf */migrations/*
