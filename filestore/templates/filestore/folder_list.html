@@ -3,19 +3,19 @@
 {% load static %}
 
 {% block content %}
-<form action="{% url 'file-list' %}" method="post">
+{{ form.errors }}
+<form action="{% url 'folder-list' %}" method="post">
   {% csrf_token %}
-<section class="section">
-  <h1 class="title">Folders</h1>
-  <p><a class="button" href="{% url 'folder-create' %}">Add Folder</a></p>
+<div class="content">
+  <h1>Folders</h1>
+  <p><a href="{% url 'folder-create' %}">Add Folder</a></p>
   {% if folders %}
-  <table class="table is-narrow is-hoverable">
+  <table class="table is-striped is-hoverable">
     <thead>
       <tr>
         <th></th>
         <th>Path</th>
         <th>Number of Files</th>
-        <th>Number of Files Added</th>
         <th>Recursive</th>
       </tr>
     </thead>
@@ -25,14 +25,14 @@
           <td><input type="checkbox" value="{{ folder.id }}" name="selected_folders"></td>
           <td><a href="{% url 'folder-detail' folder.pk %}">{{ folder.path }}</a></td>
           <td>{{ folder.num_files }}</td>
-          <td>{{ folder.num_files_added }}</td>
           <td>{{ folder.recursive }}</td>
         </tr>
       {% endfor %}
     </tbody>
   </table>
+  <button class="button is-link is-danger">Delete</button>
   {% else %}
   <p>No folders</p>
   {% endif %}
-</section>
+</div>
 {% endblock %}

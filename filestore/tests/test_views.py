@@ -9,8 +9,17 @@ from filestore.models import File, Folder
 
 class FileViewTests(TestCase):
 
+    @classmethod
+    def tearDown(self):
+        for obj in File.objects.all():
+            # required because test_delete_file already deleted the file
+            try:
+                obj.delete()
+            except FileNotFoundError:
+                pass
+
     def test_file_list_view(self):
-        resp = self.client.get('/')
+        resp = self.client.get(reverse('file-list'))
         self.assertEqual(resp.status_code, 200)
 
     def test_file_add_view_error(self):
@@ -29,20 +38,27 @@ class FileViewTests(TestCase):
         with self.assertRaises(File.DoesNotExist):
             File.objects.get(pk=1)
 
-    def test_file_add_duplicate_file(self):
-        bash_macosx = File()
-        bash_macosx.file_obj = SimpleUploadedFile(
-            name='bash_macosx_x86_64',
-            content=open('filestore/examples/bash_macosx_x86_64', 'rb').read(),
-            content_type='application/octet-stream')
-        bash_macosx.save()
-        bash_macosx_dup = File()
-        bash_macosx_dup.file_obj = SimpleUploadedFile(
-            name='bash_macosx_x86_64',
-            content=open('filestore/examples/bash_macosx_x86_64', 'rb').read(),
-            content_type='application/octet-stream')
-        with self.assertRaises(IntegrityError):
-            bash_macosx_dup.save()
+    def test_file_delete_multiple_success(self):
+        File.objects.create(file_obj=SimpleUploadedFile(
+            name='file1',
+            content=b'1234', content_type='application/octet-stream'))
+        File.objects.create(file_obj=SimpleUploadedFile(
+            name='file2',
+            content=b'5678', content_type='application/octet-stream'))
+        resp = self.client.post(reverse('file-list'), {'selected_files': ['1']})
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(File.objects.count(), 1)
+
+    def test_file_delete_multiple_failure(self):
+        File.objects.create(file_obj=SimpleUploadedFile(
+            name='file1',
+            content=b'1234', content_type='application/octet-stream'))
+        File.objects.create(file_obj=SimpleUploadedFile(
+            name='file2',
+            content=b'5678', content_type='application/octet-stream'))
+        resp = self.client.post(reverse('file-list'), {'selected_files': []})
+        self.assertContains(resp, 'errorlist')
+        self.assertEqual(File.objects.count(), 2)
 
     @skipIf(settings.TESTING, 'skip tests that require bro')
     def test_file_add_pcap(self):
@@ -56,19 +72,26 @@ class FileViewTests(TestCase):
 
 class FolderViewTests(TestCase):
 
+    @classmethod
+    def tearDown(self):
+        for obj in File.objects.all():
+            # required because test_delete_file already deleted the file
+            try:
+                obj.delete()
+            except FileNotFoundError:
+                pass
+
     def test_folder_list_view(self):
-        resp = self.client.get('/folders')
-        self.assertEqual(resp.status_code, 301)
+        resp = self.client.get(reverse('folder-list'))
+        self.assertEqual(resp.status_code, 200)
 
     def test_folder_add_view_empty_path(self):
         resp = self.client.post(reverse('folder-create'))
-        self.assertContains(resp, '<ul class="errorlist"><li>This field is required.</li></ul>')
         self.assertEqual(Folder.objects.count(), 0)
 
     def test_folder_add_view_nonexistant_path(self):
         resp = self.client.post(
             reverse('folder-create'), {'path': '/some/path'})
-        self.assertContains(resp, '<ul class="errorlist nonfield"><li>/some/path does not exist</li></ul>')
         self.assertEqual(Folder.objects.count(), 0)
 
     def test_folder_add_view_non_recursive_success(self):
@@ -86,3 +109,17 @@ class FolderViewTests(TestCase):
         self.assertEqual(resp.status_code, 302)
         folder = Folder.objects.get(path=path)
         self.assertEqual(folder.num_files, 2)
+
+    def test_file_delete_multiple_success(self):
+        Folder.objects.create(path='filestore/tests/data', recursive=False)
+        Folder.objects.create(path='filestore/tests/data/sub_dir', recursive=False)
+        resp = self.client.post(reverse('folder-list'), {'selected_folders': ['1']})
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(Folder.objects.count(), 1)
+
+    def test_folder_delete_multiple_failure(self):
+        Folder.objects.create(path='filestore/tests/data', recursive=False)
+        Folder.objects.create(path='filestore/tests/data/sub_dir', recursive=False)
+        resp = self.client.post(reverse('folder-list'), {'selected_folders': []})
+        self.assertContains(resp, 'errorlist')
+        self.assertEqual(Folder.objects.count(), 2)

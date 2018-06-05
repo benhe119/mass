@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<table>
+<table class="table is-striped is-hoverable">
   <tr>
     <td>Folder Name:</td>
     <td>{{ folder.path }}</td>
@@ -10,10 +10,6 @@
 		<td>Number of Files:</td>
 		<td>{{ folder.num_files }}</td>
 	</tr>
-  <tr>
-    <td>Number of Files Added:</td>
-		<td>{{ folder.num_files_added }}</td>
-  </tr>
   <tr>
     <td>Recursive:</td>
 		<td>{{ folder.recursive }}</td>

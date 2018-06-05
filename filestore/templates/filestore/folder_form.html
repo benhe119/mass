@@ -1,24 +1,29 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="section">
-  <h1 class="title">Add Folder</h1>
+<div class="content">
+  <h1>Add Folder</h1>
   <form action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
 	  <div class="field">
       <label class="label">Path</label>
       <div class="control">
-        <input class="input" type="text" placeholder="/some/path">
+        <input class="input" type="text" name="path" placeholder="/some/path" required>
       </div>
 	  </div>
     <div class="field">
       <div class="control">
-        <label class="checkbox">
-          <input type="checkbox">Recursively scan
-        </label>
+      <label class="checkbox">
+        <input type="checkbox" name="recursive">
+        Recursively Scan Directory
+      </label>
       </div>
     </div>
-	  <button type="submit" class="button">Add</button>
+    <div class="field">
+      <div class="control">
+	       <button class="button is-link" type="submit">Add</button>
+      </div>
+    </div>
   </form>
-</section>
+</div>
 {% endblock %}

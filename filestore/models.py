@@ -15,16 +15,17 @@ def get_upload_path(instance, filename):
     return 'files/{}/{}/{}'.format(
         instance.sha256[0:2], instance.sha256[2:4], instance.sha256)
 
+
 def delete_file_empty_dirs(path):
     path = Path(path)
     path.unlink()
     for f in path.parent.glob('*_*'):
         f.unlink()
     if sum(1 for f in path.parents[0].iterdir()) == 0:
-        logger.info(f'Deleting empty dir {path.parents[0]}')
+        logger.info(f'Deleting empty directory {path.parents[0]}')
         path.parents[0].rmdir()
         if sum(1 for f in path.parents[1].iterdir()) == 0:
-            logger.info(f'Deleting empty dir {path.parents[1]}')
+            logger.info(f'Deleting empty directory {path.parents[1]}')
             path.parents[1].rmdir()
 
 
@@ -90,7 +91,6 @@ class File(models.Model):
 class Folder(models.Model):
     path = models.CharField(max_length=250)
     num_files = models.PositiveIntegerField(editable=False, default=0)
-    num_files_added = models.PositiveIntegerField(editable=False, default=0)
     recursive = models.BooleanField(default=False)
     temporary = models.BooleanField(default=False, editable=False)
 

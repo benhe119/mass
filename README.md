@@ -4,3 +4,7 @@
 - TODO: add test_forms.py
 - TODO: determine why "from .tasks import extract_pcap, scan_folder" is necessary in views.py
 - TODO: set up supervisord to handle rqworker
+- TODO: fix num_files and num_files_added in scan_folder
+- TODO: abstract common code from FileList and FolderList in views.py
+- TODO: abstract common code from FileList and FolderList in forms.py
+- TODO: abstract tearDown() method from TestCase classes

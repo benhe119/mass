@@ -1,5 +1,4 @@
 from django import forms
-from .models import File, Folder
 
 
 class FileListForm(forms.Form):
@@ -9,9 +8,10 @@ class FileListForm(forms.Form):
         required=False
     )
 
-    class Meta:
-        model = File
-        fields = ('selected_files',)
+    def clean_selected_files(self):
+        data = self.cleaned_data['selected_files']
+        if not data:
+            raise forms.ValidationError('Select at least one file to operate on')
 
 
 class FolderListForm(forms.Form):
@@ -21,6 +21,7 @@ class FolderListForm(forms.Form):
         required=False
     )
 
-    class Meta:
-        model = Folder
-        fields = ('selected_folders',)
+    def clean_selected_folders(self):
+        data = self.cleaned_data['selected_folders']
+        if not data:
+            raise forms.ValidationError('Select at least one folder to operate on')

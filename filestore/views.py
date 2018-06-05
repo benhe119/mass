@@ -1,29 +1,35 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
-from django.views.generic.edit import CreateView, DeleteView
+from django.views.generic.edit import CreateView, DeleteView, FormView
 from .forms import FileListForm, FolderListForm
 from .models import File, Folder
 from .tasks import extract_pcap, scan_folder
 
 
-class FileList(ListView):
+class FileList(FormView):
     model = File
-    context_object_name = 'files'
     form_class = FileListForm
-    object_list = File.objects.all()
     template_name = 'filestore/file_list.html'
 
     def get_queryset(self):
         return File.objects.all()
 
     def get_context_data(self, **kwargs):
-        return super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
+        context['files'] = self.get_queryset()
+        context['form'] = self.get_form(self.form_class)
+        return context
 
     def post(self, request, *args, **kwargs):
-        for obj in File.objects.filter(pk__in=request.POST.getlist('selected_files')):
-            obj.delete()
-        return render(request, self.template_name, self.get_context_data())
+        selected_files = request.POST.getlist('selected_files')
+        form = self.get_form(self.form_class)
+        if not selected_files:
+            return render(request, self.template_name, {'form': form, 'files': self.get_queryset()})
+        else:
+            for obj in File.objects.filter(pk__in=request.POST.getlist('selected_files')):
+                obj.delete()
+            return redirect(reverse_lazy('file-list'))
 
 
 class FileCreate(CreateView):
@@ -43,23 +49,29 @@ class FileDetail(DetailView):
     slug_field = 'sha256'
 
 
-class FolderList(ListView):
+class FolderList(FormView):
     model = Folder
-    context_object_name = 'folders'
     form_class = FolderListForm
-    object_list = Folder.objects.all()
     template_name = 'filestore/folder_list.html'
 
     def get_queryset(self):
         return Folder.objects.all()
 
     def get_context_data(self, **kwargs):
-        return super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
+        context['folders'] = self.get_queryset()
+        context['form'] = self.get_form(self.form_class)
+        return context
 
     def post(self, request, *args, **kwargs):
-        for obj in Folder.objects.filter(pk__in=request.POST.getlist('selected_folders')):
-            obj.delete()
-        return render(request, self.template_name, self.get_context_data())
+        selected_folders = request.POST.getlist('selected_folders')
+        form = self.get_form(self.form_class)
+        if not selected_folders:
+            return render(request, self.template_name, {'form': form, 'folders': self.get_queryset()})
+        else:
+            for obj in Folder.objects.filter(pk__in=request.POST.getlist('selected_folders')):
+                obj.delete()
+            return redirect(reverse_lazy('folder-list'))
 
 
 class FolderCreate(CreateView):

@@ -1,0 +1,25 @@
+.mass-menu,.mass-content {
+  padding: 1.5rem;
+}
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    background-color: black;
+    color: #fff;
+    text-align: left;
+    text-overflow: ellipsis;
+    padding: 0.25em;
+    border-radius: 4px;
+    position: absolute;
+    z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}

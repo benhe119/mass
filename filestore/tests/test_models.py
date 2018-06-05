@@ -16,6 +16,7 @@ class FileTests(TransactionTestCase):
             content_type='application/octet-stream')
         bash_macosx.save()
 
+    @classmethod
     def tearDown(self):
         for obj in File.objects.all():
             # required because test_delete_file already deleted the file
@@ -47,6 +48,7 @@ class FileTests(TransactionTestCase):
         bash_macosx = File.objects.get(file_name='bash_macosx_x86_64')
         path = Path(bash_macosx.file_obj.path)
         bash_macosx.delete()
+        # TODO: Check that path is deleted
 
     def test_duplicate_file(self):
         bash_macosx_dup = File()

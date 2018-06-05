@@ -1,4 +1,5 @@
 from __future__ import absolute_import, unicode_literals
+import logging
 from pathlib import Path
 import subprocess
 from django.conf import settings
@@ -9,6 +10,7 @@ from django.dispatch import receiver
 import django_rq
 from filestore.models import File, Folder
 
+logger = logging.getLogger(__name__)
 q = django_rq.get_queue('default')
 
 
@@ -27,19 +29,23 @@ def scan_folder(instance):
                 file_rec.file_obj = _File(_file)
                 file_recs.append(file_rec)
         except PermissionError:
-            print('Permission denied', f)
+            logger.warning(f'Permission denied: "{f}"')
 
-    instance.num_files = len(file_recs)
+    num_files = len(file_recs)
+    num_files_added = num_files
+    num_duplicates = 0
     for file_rec in file_recs:
         try:
             with transaction.atomic():
                 file_rec.save()
-                instance.num_files_added =+ 1
         except IntegrityError:
-            print(file_rec, file_rec.sha256, 'already exists')
-    print('Found', instance.num_files, 'added', instance.num_files_added)
+            logger.info(f'{file_rec} {file_rec.sha256} already exists')
+            num_files_added -= 1
+            num_duplicates += 1
+    logger.info(f'Found {num_files}, added {num_files_added}, skipped {num_duplicates} duplicates')
+    instance.num_files = num_files_added
     if instance.temporary:
-        print(instance.path, 'is temporary, deleting')
+        logger.info(f'{instance.path} is temporary, deleting')
         instance.delete()
     else:
         instance.save()
