@@ -1,7 +1,6 @@
 from django.urls import path
 from filestore import views
 
-# TODO: add delete views and folder-detail view
 urlpatterns = [
     path('', views.FileList.as_view(), name='file-list'),
     path('add/', views.FileCreate.as_view(), name='file-create'),

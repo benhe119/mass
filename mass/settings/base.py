@@ -141,7 +141,8 @@ RQ_QUEUES = {
 
 PCAP_STRINGS = ['tcpdump', 'pcap']
 
-# TODO: set up logging
+ARCHIVE_TYPES = ['zip', 'tar', 'gzip']
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

@@ -4,35 +4,36 @@
 
 {% block content %}
 {{ form.errors }}
-<form action="{% url 'folder-list' %}" method="post">
-  {% csrf_token %}
-<div class="content">
-  <h1>Folders</h1>
-  <p><a href="{% url 'folder-create' %}">Add Folder</a></p>
-  {% if folders %}
-  <table class="table is-striped is-hoverable">
-    <thead>
-      <tr>
-        <th></th>
-        <th>Path</th>
-        <th>Number of Files</th>
-        <th>Recursive</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for folder in folders %}
+  <div class="content">
+    <h1>Folders</h1>
+    <p><a href="{% url 'folder-create' %}">Add Folder</a></p>
+    {% if folders %}
+    <button class="button is-link is-danger" id="show_delete_modal_btn">Delete</button>
+    <form action="{% url 'folder-list' %}" method="post">
+      {% csrf_token %}
+    <table class="table is-striped is-hoverable">
+      <thead>
         <tr>
-          <td><input type="checkbox" value="{{ folder.id }}" name="selected_folders"></td>
-          <td><a href="{% url 'folder-detail' folder.pk %}">{{ folder.path }}</a></td>
-          <td>{{ folder.num_files }}</td>
-          <td>{{ folder.recursive }}</td>
+          <th></th>
+          <th>Path</th>
+          <th>Number of Files</th>
+          <th>Recursive</th>
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  <button class="button is-link is-danger">Delete</button>
-  {% else %}
-  <p>No folders</p>
-  {% endif %}
-</div>
+      </thead>
+      <tbody>
+        {% for folder in folders %}
+          <tr>
+            <td><input type="checkbox" value="{{ folder.id }}" name="selected_folders"></td>
+            <td><a href="{% url 'folder-detail' folder.pk %}">{{ folder.path }}</a></td>
+            <td>{{ folder.num_files }}</td>
+            <td>{{ folder.recursive }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No folders</p>
+    {% endif %}
+  </div>
+</form>
 {% endblock %}

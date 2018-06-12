@@ -1,12 +1,11 @@
 from django import forms
 
 
+# TODO: abstract common parts of these forms
 class FileListForm(forms.Form):
 
-    selected_files = forms.MultipleChoiceField(
-        widget=forms.CheckboxSelectMultiple,
-        required=False
-    )
+    # handles operations on multiple Folder records from the file-list page
+    selected_files = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, required=False)
 
     def clean_selected_files(self):
         data = self.cleaned_data['selected_files']
@@ -16,10 +15,8 @@ class FileListForm(forms.Form):
 
 class FolderListForm(forms.Form):
 
-    selected_folders = forms.MultipleChoiceField(
-        widget=forms.CheckboxSelectMultiple,
-        required=False
-    )
+    # handles operations on multiple Folder records from the file-list page
+    selected_folders = forms.MultipleChoiceField(widget=forms.CheckboxSelectMultiple, required=False)
 
     def clean_selected_folders(self):
         data = self.cleaned_data['selected_folders']

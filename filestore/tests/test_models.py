@@ -1,8 +1,8 @@
+from pathlib import Path
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.utils import IntegrityError
 from django.test import TransactionTestCase
-from pathlib import Path
 from filestore.models import File, Folder
 
 
@@ -17,7 +17,8 @@ class FileTests(TransactionTestCase):
         bash_macosx.save()
 
     @classmethod
-    def tearDown(self):
+    def tearDown(cls):
+        """Delete all File objects after each test, not necessarily needed for every test case"""
         for obj in File.objects.all():
             # required because test_delete_file already deleted the file
             try:
@@ -26,31 +27,26 @@ class FileTests(TransactionTestCase):
                 pass
 
     def test_new_file(self):
+        """Add a file with known properties to test adding a new File"""
         bash_macosx = File.objects.get(file_name='bash_macosx_x86_64')
         self.assertEqual(bash_macosx.size, 626272)
-        self.assertEqual(
-            bash_macosx.md5,
-            '6e09e44ec1119410c999544ab9033dab')
-        self.assertEqual(
-            bash_macosx.sha1,
-            '87e8300692a35010af8478978fab1ac4888114e1')
-        self.assertEqual(
-            bash_macosx.sha256,
-            '295fbc2356e8605e804f95cb6d6f992335e247dbf11767fe8781e2a7f889978a')
-        self.assertIn(
-            'Mach-O 64-bit x86_64 executable',
-            bash_macosx.file_type)
+        self.assertEqual(bash_macosx.md5, '6e09e44ec1119410c999544ab9033dab')
+        self.assertEqual(bash_macosx.sha1, '87e8300692a35010af8478978fab1ac4888114e1')
+        self.assertEqual(bash_macosx.sha256, '295fbc2356e8605e804f95cb6d6f992335e247dbf11767fe8781e2a7f889978a')
+        self.assertIn('Mach-O 64-bit x86_64 executable', bash_macosx.file_type)
         path = Path(bash_macosx.file_obj.path)
         self.assertTrue(path.parent.is_dir())
         self.assertTrue(path.is_file())
 
     def test_delete_file(self):
+        """Delete a File object"""
         bash_macosx = File.objects.get(file_name='bash_macosx_x86_64')
         path = Path(bash_macosx.file_obj.path)
         bash_macosx.delete()
-        # TODO: Check that path is deleted
+        # TODO: Check that file and path are deleted
 
     def test_duplicate_file(self):
+        """A file with same SHA256 is not allowed"""
         bash_macosx_dup = File()
         bash_macosx_dup.file_obj = SimpleUploadedFile(
             name='bash_macosx_x86_64',
@@ -63,6 +59,7 @@ class FileTests(TransactionTestCase):
 class FolderTests(TransactionTestCase):
 
     def test_new_folder_nonexistant_path(self):
+        """A Folder with a path that doesn't exist should not be added"""
         folder = Folder()
         folder.path = '/some/path'
         with self.assertRaises(ValidationError):

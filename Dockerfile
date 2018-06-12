@@ -6,7 +6,7 @@ ENV PATH="/opt/bro/bin:${PATH}"
 
 RUN wget -qO - http://download.opensuse.org/repositories/network:/bro/Debian_8.0/Release.key | apt-key add - && \
     echo 'deb http://download.opensuse.org/repositories/network:/bro/Debian_8.0/ /' >> /etc/apt/sources.list.d/bro.list && \
-    apt-get update && apt-get install -y bro supervisor && pip install bro-pkg
+    apt-get update && apt-get install -y bro supervisor p7zip && pip install bro-pkg
 
 COPY . /app
 

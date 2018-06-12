@@ -1,6 +1,8 @@
+from django.contrib import messages
+from django.db.utils import IntegrityError
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView
 from django.views.generic.edit import CreateView, DeleteView, FormView
 from .forms import FileListForm, FolderListForm
 from .models import File, Folder
@@ -12,7 +14,8 @@ class FileList(FormView):
     form_class = FileListForm
     template_name = 'filestore/file_list.html'
 
-    def get_queryset(self):
+    @staticmethod
+    def get_queryset():
         return File.objects.all()
 
     def get_context_data(self, **kwargs):
@@ -22,20 +25,30 @@ class FileList(FormView):
         return context
 
     def post(self, request, *args, **kwargs):
+        # TODO: add confirmation modal
+        # selected_files is a list of checkboxes selected
         selected_files = request.POST.getlist('selected_files')
         form = self.get_form(self.form_class)
+        # Return the form if no Files are selected (error added by FileListForm)
         if not selected_files:
             return render(request, self.template_name, {'form': form, 'files': self.get_queryset()})
-        else:
-            for obj in File.objects.filter(pk__in=request.POST.getlist('selected_files')):
-                obj.delete()
-            return redirect(reverse_lazy('file-list'))
+        # Can't use bulk delete, need File.delete() to run to clean up files
+        for obj in File.objects.filter(pk__in=request.POST.getlist('selected_files')):
+            obj.delete()
+        return redirect(reverse_lazy('file-list'))
 
 
 class FileCreate(CreateView):
     model = File
     fields = ('file_obj', )
     success_url = reverse_lazy('file-list')
+
+    def form_valid(self, form):
+        try:
+            return super().form_valid(form)
+        except IntegrityError:
+            form.add_error(None, 'Duplicate file')
+            return self.form_invalid(form)
 
 
 class FileDelete(DeleteView):
@@ -54,7 +67,8 @@ class FolderList(FormView):
     form_class = FolderListForm
     template_name = 'filestore/folder_list.html'
 
-    def get_queryset(self):
+    @staticmethod
+    def get_queryset():
         return Folder.objects.all()
 
     def get_context_data(self, **kwargs):
@@ -64,14 +78,15 @@ class FolderList(FormView):
         return context
 
     def post(self, request, *args, **kwargs):
+        # TODO: add confirmation modal
         selected_folders = request.POST.getlist('selected_folders')
         form = self.get_form(self.form_class)
         if not selected_folders:
             return render(request, self.template_name, {'form': form, 'folders': self.get_queryset()})
-        else:
-            for obj in Folder.objects.filter(pk__in=request.POST.getlist('selected_folders')):
-                obj.delete()
-            return redirect(reverse_lazy('folder-list'))
+        # TODO: probably can replace this with bulk debug
+        for obj in Folder.objects.filter(pk__in=request.POST.getlist('selected_folders')):
+            obj.delete()
+        return redirect(reverse_lazy('folder-list'))
 
 
 class FolderCreate(CreateView):
