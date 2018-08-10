@@ -16,7 +16,7 @@ def get_upload_path(instance, filename):
     return 'files/{}/{}/{}'.format(
         instance.sha256[0:2], instance.sha256[2:4], instance.sha256)
 
-
+# TODO: make RQ job
 def delete_file_empty_dirs(path, duplicate=False):
     """Delete file on disk and any empty directories"""
     path = Path(path)
@@ -54,8 +54,7 @@ class File(models.Model):
     time_to_process = models.PositiveIntegerField(editable=False, default=0)
 
     def save(self, *args, **kwargs):
-        created = self.pk is None
-        if created:
+        if self.pk is None:
             # Set name and size of the file
             self.file_name = Path(self.file_obj.name).name
             self.size = self.file_obj.size
@@ -65,13 +64,11 @@ class File(models.Model):
             self.md5, self.sha1, self.sha256, self.file_type = self.get_file_info(self.file_obj.file)
             self.time_to_process = int((dt.now() - _proc_start).total_seconds() * 1000)
             self.path = get_upload_path(self, None)
-            logger.info(f'Saved new file: "{self.file_name}" ({self.size:,} B) to {self.path}')
         try:
             super().save(*args, **kwargs)
 
         # Django's FileField writes the file to disk first, so if it's a duplicate
         #   it needs to be removed
-        # TODO: this needs to return a useful message to the UI
         except IntegrityError:
             delete_file_empty_dirs(self.path, duplicate=True)
             raise
@@ -87,7 +84,7 @@ class File(models.Model):
 
     @staticmethod
     def get_file_info(file_obj):
-        # Seek to the beginning of the file because the upload process caused it to
+        # Seek to the beginning of the file, upload process caused it to
         #   be read to the end.
         file_obj.seek(0)
         md5 = hashlib.md5()
@@ -131,8 +128,7 @@ class Folder(models.Model):
             raise ValidationError('{} does not exist'.format(self.path))
 
     def save(self, *args, **kwargs):
-        created = self.pk is None
-        if created:
+        if self.pk is None:
             self.full_clean()
         super().save(*args, **kwargs)
 

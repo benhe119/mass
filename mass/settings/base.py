@@ -139,6 +139,9 @@ RQ_QUEUES = {
     }
 }
 
+# Allow operating on more than 1000 objects at a time
+DATA_UPLOAD_MAX_NUMBER_FIELDS = None
+
 PCAP_STRINGS = ['tcpdump', 'pcap']
 
 ARCHIVE_TYPES = ['zip', 'tar', 'gzip']

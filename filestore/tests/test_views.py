@@ -1,7 +1,7 @@
 from unittest import skipIf
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
 from filestore.models import File, Folder
 
@@ -26,6 +26,7 @@ class FileViewTests(TestCase):
         """Shouldn't be able to create a File record without uploading a file"""
         resp = self.client.post(reverse('file-create'), {'file_obj': None})
         self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'errorlist')
 
     def test_file_add_delete_view_success(self):
         file_obj = SimpleUploadedFile(
@@ -69,13 +70,25 @@ class FileViewTests(TestCase):
         resp = self.client.post(reverse('file-create'), {'file_obj': pcap})
         self.assertEqual(resp.status_code, 302)
         # TODO: make sure the correct File records are added
-    
-    def test_archive_extraction(self):
+
+    def test_file_archive_extraction(self):
         archive = SimpleUploadedFile(
             name='some_txt_files.tar.gz',
             content=open('filestore/examples/some_txt_files.tar.gz', 'rb').read(),
             content_type='application/octet-stream')
         resp = self.client.post(reverse('file-create'), {'file_obj': archive})
+        self.assertEqual(resp.status_code, 302)
+
+
+class FileViewTransactionTests(TransactionTestCase):
+
+    def test_file_upload_duplicate(self):
+        orig_file = SimpleUploadedFile(name='file2', content=b'1234', content_type='application/octet-stream')
+        resp = self.client.post(reverse('file-create'), {'file_obj': orig_file})
+        dup_file = SimpleUploadedFile(name='file2', content=b'1234', content_type='application/octet-stream')
+        resp = self.client.post(reverse('file-create'), {'file_obj': dup_file})
+        self.assertContains(resp, 'errorlist')
+        self.assertEqual(File.objects.count(), 1)
 
 
 class FolderViewTests(TestCase):

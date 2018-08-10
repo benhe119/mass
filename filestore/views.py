@@ -1,4 +1,3 @@
-from django.contrib import messages
 from django.db.utils import IntegrityError
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
@@ -6,6 +5,7 @@ from django.views.generic import DetailView
 from django.views.generic.edit import CreateView, DeleteView, FormView
 from .forms import FileListForm, FolderListForm
 from .models import File, Folder
+# TODO: extract_archive is not listed here, but works?
 from .tasks import extract_pcap, scan_folder
 
 
