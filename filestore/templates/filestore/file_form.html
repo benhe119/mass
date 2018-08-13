@@ -8,7 +8,7 @@
     {% csrf_token %}
     <div class="file">
       <label class="file-label">
-        <input class="file-input" type="file" name="file_obj">
+        <input class="file-input" type="file" name="file_obj" id="file_obj">
         <span class="file-cta">
           <span class="file-icon">
             <i class="fas fa-upload"></i>
@@ -19,9 +19,26 @@
         </span>
       </label>
     </div>
+		<div id="filename">
+		</div>
     <div class="field">
       <button class="button is-link" type="submit">Upload</button>
     </div>
   </form>
 </div>
+<script>
+'use strict';
+
+document.addEventListener('DOMContentLoaded', function () {
+	var filename_div = document.getElementById('filename');
+
+	document.getElementById("file_obj").onchange = function () {
+		let f_array = this.value.split('\\');
+		let filename = f_array[f_array.length - 1];
+		let filesize = this.files[0].size;
+		let filesize_kib = Math.round((parseInt(filesize) / 1024) * 100) / 100
+		filename_div.innerHTML = filename + " (" + filesize_kib + " KiB)";
+  };
+});
+</script>
 {% endblock %}
