@@ -67,45 +67,59 @@ def scan_folder_handler(sender, instance, created, **kwargs):
         q.enqueue(scan_folder, instance)
 
 
-def extract_pcap(instance):
-    # TODO: Use pathlib to handle directory interaction
-    # raise exception if bro executable is not found, will cause job to be marked as failed
-    try:
-        subprocess.run(['which', 'bro'], check=True)
-    except subprocess.CalledProcessError:
-        logger.error('Cannot find bro')
-        raise
-    logger.info(f'Extacting PCAP {instance.path}')
-    extract_cmd_str = 'rm -rf bro/tmp && mkdir bro/tmp && cd bro/tmp && bro -C -r ../../{} ../plugins/extract-all-files.bro'.format(instance.path)
-    subprocess.run(extract_cmd_str, shell=True)
-    Folder.objects.create(path='bro/tmp/extract_files', temporary=True)
+# def extract_pcap(instance):
+#     # TODO: Use pathlib to handle directory interaction
+#     # raise exception if bro executable is not found, will cause job to be marked as failed
+#     try:
+#         subprocess.run(['which', 'bro'], check=True)
+#     except subprocess.CalledProcessError:
+#         logger.error('Cannot find bro')
+#         raise
+#     logger.info(f'Extacting PCAP {instance.path}')
+#     extract_cmd_str = 'rm -rf bro/tmp && mkdir bro/tmp && cd bro/tmp && bro -C -r ../../{} ../plugins/extract-all-files.bro'.format(instance.path)
+#     subprocess.run(extract_cmd_str, shell=True)
+#     Folder.objects.create(path='bro/tmp/extract_files', temporary=True)
+
+
+# def extract_archive(instance):
+#     temp_dir = tempfile.mkdtemp()
+#     logger.info(f'Extracting {instance.path} to {temp_dir}')
+#     extract_cmd = f'7z x {instance.path} -aoa -o{temp_dir}'
+#     logger.info(f'Extraction Command: {extract_cmd}')
+#     subprocess.run(extract_cmd, shell=True)
+#     Folder.objects.create(path=temp_dir, recursive=True, temporary=True)
+
+
+def extract_file(instance, pcap=False, archive=False):
+    if pcap:
+        try:
+            subprocess.run(['which', 'bro'], check=True)
+        except subprocess.CalledProcessError:
+            logger.error('Cannot find bro')
+            raise
+        logger.info(f'Extacting PCAP {instance.path}')
+        extract_cmd_str = 'rm -rf bro/tmp && mkdir bro/tmp && cd bro/tmp && bro -C -r ../../{} ../plugins/extract-all-files.bro'.format(instance.path)
+        subprocess.run(extract_cmd_str, shell=True)
+        Folder.objects.create(path='bro/tmp/extract_files', temporary=True)
+
+    if archive:
+        temp_dir = tempfile.mkdtemp()
+        logger.info(f'Extracting {instance.path} to {temp_dir}')
+        extract_cmd = f'7z x {instance.path} -aoa -o{temp_dir}'
+        logger.info(f'Extraction Command: {extract_cmd}')
+        subprocess.run(extract_cmd, shell=True)
+        Folder.objects.create(path=temp_dir, recursive=True, temporary=True)
 
 
 @receiver(post_save, sender=File)
-def extract_pcap_handler(sender, instance, created, **kwargs):
+def extract_file_handler(sender, instance, created, **kwargs):
     # Only run job for new Files that have been typed
     if created and instance.file_type is not None:
-        # TODO: has to be a more pythonic way to do this - any() maybe?
         for pcap_str in settings.PCAP_STRINGS:
             if pcap_str in instance.file_type:
-                q.enqueue(extract_pcap, instance)
+                q.enqueue(extract_file, instance, pcap=True)
                 break
-
-
-def extract_archive(instance):
-    temp_dir = tempfile.mkdtemp()
-    logger.info(f'Extracting {instance.path} to {temp_dir}')
-    extract_cmd = f'7z x {instance.path} -aoa -o{temp_dir}'
-    logger.info(f'Extraction Command: {extract_cmd}')
-    subprocess.run(extract_cmd, shell=True)
-    Folder.objects.create(path=temp_dir, recursive=True, temporary=True)
-
-
-@receiver(post_save, sender=File)
-def extract_archive_handler(sender, instance, created, **kwargs):
-    # Only run job for new Files that have been typed
-    if created and instance.file_type is not None:
         for archive_type in settings.ARCHIVE_TYPES:
             if archive_type in instance.file_type.lower():
-                q.enqueue(extract_archive, instance)
+                q.enqueue(extract_file, instance, archive=True)
                 break
