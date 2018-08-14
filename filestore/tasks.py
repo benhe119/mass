@@ -67,29 +67,6 @@ def scan_folder_handler(sender, instance, created, **kwargs):
         q.enqueue(scan_folder, instance)
 
 
-# def extract_pcap(instance):
-#     # TODO: Use pathlib to handle directory interaction
-#     # raise exception if bro executable is not found, will cause job to be marked as failed
-#     try:
-#         subprocess.run(['which', 'bro'], check=True)
-#     except subprocess.CalledProcessError:
-#         logger.error('Cannot find bro')
-#         raise
-#     logger.info(f'Extacting PCAP {instance.path}')
-#     extract_cmd_str = 'rm -rf bro/tmp && mkdir bro/tmp && cd bro/tmp && bro -C -r ../../{} ../plugins/extract-all-files.bro'.format(instance.path)
-#     subprocess.run(extract_cmd_str, shell=True)
-#     Folder.objects.create(path='bro/tmp/extract_files', temporary=True)
-
-
-# def extract_archive(instance):
-#     temp_dir = tempfile.mkdtemp()
-#     logger.info(f'Extracting {instance.path} to {temp_dir}')
-#     extract_cmd = f'7z x {instance.path} -aoa -o{temp_dir}'
-#     logger.info(f'Extraction Command: {extract_cmd}')
-#     subprocess.run(extract_cmd, shell=True)
-#     Folder.objects.create(path=temp_dir, recursive=True, temporary=True)
-
-
 def extract_file(instance, pcap=False, archive=False):
     if pcap:
         try:
