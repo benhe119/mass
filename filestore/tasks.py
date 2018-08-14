@@ -77,8 +77,8 @@ def extract_pcap(instance):
         raise
     logger.info(f'Extacting PCAP {instance.path}')
     extract_cmd_str = 'rm -rf bro/tmp && mkdir bro/tmp && cd bro/tmp && bro -C -r ../../{} ../plugins/extract-all-files.bro'.format(instance.path)
-    extract_cmd = subprocess.run(extract_cmd_str, shell=True)
-    new_folder = Folder.objects.create(path='bro/tmp/extract_files', temporary=True)
+    subprocess.run(extract_cmd_str, shell=True)
+    Folder.objects.create(path='bro/tmp/extract_files', temporary=True)
 
 
 @receiver(post_save, sender=File)

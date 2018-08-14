@@ -6,7 +6,13 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.utils import IntegrityError
 from django.urls import reverse
-import magic
+
+try:
+    import magic
+except ImportError:
+    import sys
+    print('ERROR: Cannot find magic library')
+    sys.exit(1)
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +21,7 @@ def get_upload_path(instance, filename):
     """Keep the number of files in a directory low by slicing the SHA256"""
     return 'files/{}/{}/{}'.format(
         instance.sha256[0:2], instance.sha256[2:4], instance.sha256)
+
 
 # TODO: make RQ job
 def delete_file_empty_dirs(path, duplicate=False):
