@@ -1,0 +1,16 @@
+# ref: https://docs.travis-ci.com/user/languages/python
+language: python
+dist: trusty
+
+matrix:
+    include:
+     - python: 3.6
+       env: TOXENV=flake8
+     - python: 3.6
+       env: TOXENV=py36
+
+install:
+  - pip install tox
+
+script:
+  - tox

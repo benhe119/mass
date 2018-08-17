@@ -9,3 +9,5 @@ files/
 bro/tmp
 *.log
 .vscode
+.tox
+htmlcov
