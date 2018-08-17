@@ -2,18 +2,11 @@
 language: python
 dist: trusty
 
-matrix:
-    include:
-     - python: 3.6
-       env: TOXENV=py36
-     - python: 3.6
-       env: TOXENV=flake8
-
 install:
   - pip install tox codecov
 
 script:
-  - tox -e py36 flake8
+  - tox
 
 after_success:
   - codecov
