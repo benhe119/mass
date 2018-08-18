@@ -1,0 +1,6 @@
+[run]
+source =
+	filestore
+omit =
+    filestore/tests/test_*.py
+    filestore/migrations/*
