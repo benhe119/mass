@@ -1,4 +1,9 @@
-MASS - Malware Analyst's Storage System
+# MASS
+
+[![Build Status](https://travis-ci.org/mkerins/mass.svg?branch=develop)](https://travis-ci.org/mkerins/mass)
+[![codecov.io](http://codecov.io/github/mkerins/mass/coverage.svg?branch=develop)](http://codecov.io/github/mkerins/mass?branch=develop)
+
+Malware Analyst's Storage System
 
 Simple web application to manage files for malware analysts.
 
