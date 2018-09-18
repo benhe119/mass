@@ -1,6 +1,8 @@
 from __future__ import absolute_import, unicode_literals
 import logging
+import os
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 from django.conf import settings
@@ -75,7 +77,10 @@ def extract_file(instance, pcap=False, archive=False):
             logger.error('Cannot find bro')
             raise
         logger.info(f'Extacting PCAP {instance.path}')
-        extract_cmd_str = 'rm -rf bro/tmp && mkdir bro/tmp && cd bro/tmp && bro -C -r ../../{} ../plugins/extract-all-files.bro'.format(instance.path)
+        shutil.rmtree('bro/tmp', ignore_errors=True)
+        os.mkdir('bro/tmp')
+        os.chdir('bro/tmp')
+        extract_cmd_str = f'bro -C -r ../../{instance.path} ../plugins/extract-all-files.bro'
         subprocess.run(extract_cmd_str, shell=True)
         Folder.objects.create(path='bro/tmp/extract_files', temporary=True)
 
