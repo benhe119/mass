@@ -1,4 +1,5 @@
 from django import forms
+from .models import ClamAVSettings
 
 
 # TODO: abstract common parts of these forms
@@ -22,3 +23,10 @@ class FolderListForm(forms.Form):
         data = self.cleaned_data['selected_folders']
         if not data:
             raise forms.ValidationError('Select at least one folder to operate on')
+
+
+class ClamAVSettingsForm(forms.ModelForm):
+
+    class Meta:
+        model = ClamAVSettings
+        fields = ['enabled', ]

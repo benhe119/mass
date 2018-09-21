@@ -11,3 +11,4 @@ bro/tmp
 .vscode
 .tox
 htmlcov
+etc/clamav/*.cvd

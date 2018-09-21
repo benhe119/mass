@@ -13,13 +13,13 @@ from django.dispatch import receiver
 import django_rq
 from filestore.models import File, Folder
 
-logger = logging.getLogger(__name__)
+LOG = logging.getLogger(__name__)
 q = django_rq.get_queue('default')
 
 
 def scan_folder(instance):
     path = Path(instance.path)
-    logger.info(f'Scanning {path}')
+    LOG.info('Scanning %s', path)
 
     # Adjust glob method based on recursive preference
     if instance.recursive:
@@ -38,25 +38,25 @@ def scan_folder(instance):
             try:
                 _file = open(f, 'rb')
             except PermissionError:
-                logger.warning(f'Permission denied: {file_rec}')
+                LOG.warning('Permission denied: %s', file_rec)
                 break
             file_rec.file_obj = _File(_file)
             # Don't add duplicates files (based on SHA256)
             try:
                 with transaction.atomic():
                     file_rec.save()
-                logger.info(f'Saved new file: {file_rec} {file_rec.sha256}')
+                LOG.info('Saved new file: %s %s', file_rec, file_rec.sha256)
             except IntegrityError:
-                logger.info(f'{file_rec} {file_rec.sha256} already exists')
+                LOG.info('%s %s already exists', file_rec, file_rec.sha256)
                 # Update counters
                 num_duplicates += 1
 
     num_files_added = num_files - num_duplicates
-    logger.info(f'Found {num_files}, added {num_files_added}, skipped {num_duplicates} duplicates')
+    LOG.info('Found %s, added %s, skipped %s duplicates', num_files, num_files, num_duplicates)
     instance.num_files = num_files_added
     if instance.temporary:
         # Currently only used when bro extracts a PCAP
-        logger.info(f'{instance.path} is temporary, deleting')
+        LOG.info('%s is temporary, deleting', instance.path)
         instance.delete()
     else:
         instance.save()
@@ -74,21 +74,20 @@ def extract_file(instance, pcap=False, archive=False):
         try:
             subprocess.run(['which', 'bro'], check=True)
         except subprocess.CalledProcessError:
-            logger.error('Cannot find bro')
+            LOG.error('Cannot find bro')
             raise
-        logger.info(f'Extacting PCAP {instance.path}')
+        LOG.info('Extacting PCAP %s', instance.path)
         shutil.rmtree('bro/tmp', ignore_errors=True)
         os.mkdir('bro/tmp')
-        os.chdir('bro/tmp')
         extract_cmd_str = f'bro -C -r ../../{instance.path} ../plugins/extract-all-files.bro'
-        subprocess.run(extract_cmd_str, shell=True)
+        subprocess.run(extract_cmd_str, shell=True, cwd='bro/tmp')
         Folder.objects.create(path='bro/tmp/extract_files', temporary=True)
 
     if archive:
         temp_dir = tempfile.mkdtemp()
-        logger.info(f'Extracting {instance.path} to {temp_dir}')
+        LOG.info('Extracting %s to %s', instance.path, temp_dir)
         extract_cmd = f'7z x {instance.path} -aoa -o{temp_dir}'
-        logger.info(f'Extraction Command: {extract_cmd}')
+        LOG.info('Extraction Command: %s', extract_cmd)
         subprocess.run(extract_cmd, shell=True)
         Folder.objects.create(path=temp_dir, recursive=True, temporary=True)
 

@@ -16,5 +16,12 @@
         "groups": [],
         "user_permissions": []
     }
+},
+{
+    "model": "filestore.clamavsettings",
+    "pk": 1,
+    "fields": {
+        "enabled": true
+    }
 }
 ]

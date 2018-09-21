@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content">
+  <h1>ClamAV Settings</h1>
+  <form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form }}
+    <div class="field">
+        <button class="button is-link" type="submit">Save Settings</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
