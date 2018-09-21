@@ -1,5 +1,3 @@
-from unittest import skipIf
-from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
@@ -60,7 +58,6 @@ class FileViewTests(TestCase):
         self.assertContains(resp, 'errorlist')
         self.assertEqual(File.objects.count(), 2)
 
-    @skipIf(settings.TESTING, 'skip tests that require bro')
     def test_file_add_pcap(self):
         """Test uploading a PCAP that should be extracted by bro"""
         pcap = SimpleUploadedFile(
@@ -94,7 +91,7 @@ class FileViewTransactionTests(TransactionTestCase):
 class FolderViewTests(TestCase):
 
     @classmethod
-    def tearDown(self):
+    def tearDown(cls):
         """Delete all File objects after each test, not necessarily needed for every test case"""
         for obj in File.objects.all():
             # required because test_delete_file already deleted the file
@@ -150,3 +147,12 @@ class FolderViewTests(TestCase):
         resp = self.client.post(reverse('folder-list'), {'selected_folders': []})
         self.assertContains(resp, 'errorlist')
         self.assertEqual(Folder.objects.count(), 2)
+
+
+class SettingsViewTests(TestCase):
+
+    def test_clamav_context_processor(self):
+        get_resp = self.client.get(reverse('folder-list'))
+        self.assertContains(get_resp, 'has-text-success')
+        post_resp = self.client.post(reverse('clamav-settings'), {'enabled': False})
+        self.assertContains(post_resp, 'has-text-danger')

@@ -33,6 +33,7 @@
           <th>Filename</th>
           <th>Size</th>
           <th>SHA256</th>
+          <th>ClamAV</th>
           <th>Added</th>
           <th>Proc. Time</th>
         </tr>
@@ -50,6 +51,11 @@
             <td>
               <div class="tooltip">{{ file.sha256|truncatechars:15 }}
                 <span class="tooltiptext">{{ file.sha256 }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="tooltip">{{ file.clamav_msg|default:"(none)" }}
+                <span class="tooltiptext">{{ file.clamav_msg|default:"No ClamAV detection"|truncatechars:50 }}</span>
               </div>
             </td>
             <td>{{ file.added|date:"Y-m-d H:i:s" }}</td>

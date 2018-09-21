@@ -1,6 +1,7 @@
 Django==2.0.5
 django-rq==1.1.0
 filemagic==1.6
+pyClamd==0.4.0
 pytz==2018.4
 redis==2.10.6
 rq==0.10.0

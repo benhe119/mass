@@ -1,9 +1,10 @@
 from pathlib import Path
+import shutil
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.utils import IntegrityError
 from django.test import TransactionTestCase
-from filestore.models import File, Folder
+from filestore.models import ClamAVSettings, File, Folder
 
 
 class FileTests(TransactionTestCase):
@@ -43,7 +44,7 @@ class FileTests(TransactionTestCase):
         bash_macosx = File.objects.get(file_name='bash_macosx_x86_64')
         path = Path(bash_macosx.file_obj.path)
         bash_macosx.delete()
-        # TODO: Check that file and path are deleted
+        self.assertFalse(path.exists())
 
     def test_duplicate_file(self):
         """A file with same SHA256 is not allowed"""
@@ -54,6 +55,43 @@ class FileTests(TransactionTestCase):
             content_type='application/octet-stream')
         with self.assertRaises(IntegrityError):
             bash_macosx_dup.save()
+
+    def test_clamav_file(self):
+        """ClamAV should hit on the test EICAR file"""
+        eicar = File()
+        eicar.file_obj = SimpleUploadedFile(
+            name='eicar.com.txt',
+            content=open('filestore/examples/eicar.com.txt', 'rb').read(),
+            content_type='application/octet-stream')
+        eicar.save()
+        eicar.refresh_from_db()
+        self.assertEqual(eicar.clamav_msg, 'Eicar-Test-Signature')
+
+    def test_clamav_disabled(self):
+        """There should be no clamav_msg when it's disabled"""
+        clamav_settings = ClamAVSettings.load()
+        clamav_settings.enabled = False
+        clamav_settings.save()
+        eicar = File()
+        eicar.file_obj = SimpleUploadedFile(
+            name='eicar.com.txt',
+            content=open('filestore/examples/eicar.com.txt', 'rb').read(),
+            content_type='application/octet-stream')
+        eicar.save()
+        eicar.refresh_from_db()
+        self.assertEqual(eicar.clamav_msg, '')
+        clamav_settings = ClamAVSettings.load()
+        clamav_settings.enabled = True
+        clamav_settings.save()
+
+    def test_delete_nonexistant_file(self):
+        File.objects.create(file_obj=SimpleUploadedFile(
+            name='file1', content=b'1234', content_type='application/octet-stream'))
+        file1 = File.objects.get(file_name='file1')
+        print('file1.path', file1.path)
+        # os.remove(file1.path)
+        shutil.rmtree('/'.join(file1.path.split('/')[0:2]))
+        file1.delete()
 
 
 class FolderTests(TransactionTestCase):

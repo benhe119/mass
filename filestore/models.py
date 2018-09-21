@@ -2,19 +2,21 @@ from datetime import datetime as dt
 import hashlib
 import logging
 from pathlib import Path
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.utils import IntegrityError
 from django.urls import reverse
+import pyclamd
+
+LOG = logging.getLogger(__name__)
 
 try:
     import magic
 except ImportError:
     import sys
-    print('ERROR: Cannot find magic library')
+    LOG.error('ERROR: Cannot find magic library')
     sys.exit(1)
-
-logger = logging.getLogger(__name__)
 
 
 def get_upload_path(instance, filename):
@@ -44,7 +46,42 @@ def delete_file_empty_dirs(path, duplicate=False):
             path.parents[1].rmdir()
     if deleted_dirs:
         deleted_dirs_str = ', '.join(deleted_dirs)
-        logger.info(f'Deleted empty directories {deleted_dirs_str}')
+        LOG.info('Deleted empty directories %s', deleted_dirs_str)
+
+
+class SettingsModel(models.Model):
+    """Abstract class to handle settings as singletons, based on:
+    https://steelkiwi.com/blog/practical-application-singleton-design-pattern/"""
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super(SettingsModel, self).save(*args, **kwargs)
+        self.set_cache()
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    def set_cache(self):
+        cache.set(self.__class__.__name__, self)
+
+    @classmethod
+    def load(cls):
+        if cache.get(cls.__name__) is None:
+            obj, created = cls.objects.get_or_create(pk=1)
+            if not created:
+                obj.set_cache()
+        return cache.get(cls.__name__)
+
+
+class ClamAVSettings(SettingsModel):
+    enabled = models.BooleanField(default=True)
+
+    def __str__(self):
+        if self.enabled:
+            return 'ClamAV Enabled'
+        return 'ClamAV Disabled'
 
 
 class File(models.Model):
@@ -57,6 +94,7 @@ class File(models.Model):
     md5 = models.CharField(max_length=32, editable=False, unique=True)
     sha1 = models.CharField(max_length=40, editable=False, unique=True)
     sha256 = models.CharField(max_length=64, editable=False, unique=True)
+    clamav_msg = models.CharField(max_length=250, editable=False, default='')
     added = models.DateTimeField(auto_now_add=True)
     time_to_process = models.PositiveIntegerField(editable=False, default=0)
 
@@ -69,6 +107,8 @@ class File(models.Model):
             # Pass the file handle/pointer to calculate checksums and get filetype.
             #   This should be (much?) faster than using disk I/O
             self.md5, self.sha1, self.sha256, self.file_type = self.get_file_info(self.file_obj.file)
+            if ClamAVSettings.load().enabled:
+                self.clamav_msg = self.clamav_scan(self.file_obj.file, self.file_name)
             self.time_to_process = int((dt.now() - _proc_start).total_seconds() * 1000)
             self.path = get_upload_path(self, None)
         try:
@@ -85,9 +125,34 @@ class File(models.Model):
         try:
             delete_file_empty_dirs(self.path)
         except FileNotFoundError:
-            logging.warning(f'{self.path} was not found, deleting record')
+            LOG.warning('%s was not found, deleting record', self.path)
         finally:
             super().delete(*args, **kwargs)
+
+    @staticmethod
+    def _connect_clamd():
+        try:
+            return pyclamd.ClamdAgnostic()
+        except ValueError:
+            LOG.warning('Unable to connect to clamd')
+            return None
+
+    def clamav_scan(self, file_obj, file_name):
+        cd = self._connect_clamd()
+        if cd:
+            file_obj.seek(0)
+            try:
+                clam_results = cd.scan_stream(file_obj.read())
+                if clam_results:
+                    clamav_msg = clam_results['stream'][1]
+                    LOG.info('ClamAV found "%s" in %s', clamav_msg, file_name)
+                    return clamav_msg
+                LOG.info('No ClamAV hits in %s', file_name)
+                return ''
+            except BrokenPipeError:
+                LOG.warning('There was a problem scanning %s', file_name)
+        else:
+            return ''
 
     @staticmethod
     def get_file_info(file_obj):

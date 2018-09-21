@@ -62,6 +62,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'filestore.context_processors.object_counts',
+                'filestore.context_processors.clamav_settings',
             ],
         },
     },
