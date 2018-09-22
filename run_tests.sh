@@ -3,6 +3,9 @@
 # python manage.py makemigrations filestore
 # python manage.py migrate
 export DJANGO_SETTINGS_MODULE=mass.settings.test
+pip install flake8 coverage fakeredis
+freshclam
+/etc/init.d/clamav-daemon start
 find {filestore,mass} -name "__pycache__" | xargs rm -rf
 python -m flake8 --max-line-length=119 filestore/ mass/
 rm -rf debug.log
