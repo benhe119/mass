@@ -9,6 +9,9 @@ before_install:
   - docker build -t mkerins/mass .
   - docker run -d mkerins/mass /bin/sh -c "freshclam && /etc/init.d/clamav-daemon start"
 
+install:
+  - pip install codecov
+
 script:
   - docker run -d mkerins/mass /bin/sh -c "./run_tests"
 
