@@ -6,6 +6,7 @@ services:
   - docker
 
 before_install:
+  - docker pull mkerins/mass
   - docker build -t mkerins/mass .
 
 install:
