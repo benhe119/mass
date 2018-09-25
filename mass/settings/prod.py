@@ -1,6 +1,5 @@
 from .base import *
 
-DEBUG = True
-TESTING = False
+DEBUG = False
 
 RQ_QUEUES['default']['HOST'] = 'redis'
