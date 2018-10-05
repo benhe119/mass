@@ -5,6 +5,7 @@ services:
     build:
       context: .
     command: ./run_prod.sh
+    user: root
     volumes:
       - .:/app
     ports:

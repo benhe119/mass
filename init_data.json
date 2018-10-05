@@ -18,10 +18,17 @@
     }
 },
 {
-    "model": "filestore.clamavsettings",
+    "model": "filestore.settings",
     "pk": 1,
     "fields": {
-        "enabled": true
+        "name": "main",
+        "clamav_enabled": true,
+        "clamav_main_sigs": 0,
+        "clamav_main_ver": 0,
+        "clamav_daily_sigs": 0,
+        "clamav_daily_ver": 0,
+        "clamav_bytecode_sigs": 0,
+        "clamav_bytecode_ver": 0
     }
 }
 ]

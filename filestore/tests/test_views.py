@@ -1,7 +1,8 @@
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
-from filestore.models import File, Folder
+from django.utils import timezone
+from filestore.models import Settings, File, Folder
 
 
 class FileViewTests(TestCase):
@@ -24,7 +25,7 @@ class FileViewTests(TestCase):
         """Shouldn't be able to create a File record without uploading a file"""
         resp = self.client.post(reverse('file-create'), {'file_obj': None})
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'errorlist')
+        self.assertContains(resp, 'This field is required')
 
     def test_file_add_delete_view_success(self):
         file_obj = SimpleUploadedFile(
@@ -84,7 +85,7 @@ class FileViewTransactionTests(TransactionTestCase):
         resp = self.client.post(reverse('file-create'), {'file_obj': orig_file})
         dup_file = SimpleUploadedFile(name='file2', content=b'1234', content_type='application/octet-stream')
         resp = self.client.post(reverse('file-create'), {'file_obj': dup_file})
-        self.assertContains(resp, 'errorlist')
+        self.assertContains(resp, 'Duplicate file')
         self.assertEqual(File.objects.count(), 1)
 
 
@@ -151,8 +152,30 @@ class FolderViewTests(TestCase):
 
 class SettingsViewTests(TestCase):
 
-    def test_clamav_context_processor(self):
+    def setUp(self):
+        Settings.objects.create(clamav_enabled=True, clamav_last_updated=timezone.now(), name='main')
+
+    def test_clamav_settings(self):
         get_resp = self.client.get(reverse('folder-list'))
         self.assertContains(get_resp, 'has-text-success')
-        post_resp = self.client.post(reverse('clamav-settings'), {'enabled': False})
-        self.assertContains(post_resp, 'has-text-danger')
+        post_resp = self.client.post(reverse('settings', kwargs={'slug': 'main'}), follow=True)
+        self.assertEqual(post_resp.status_code, 200)
+        messages = post_resp.context['messages']
+        self.assertEqual(len(messages), 1)
+        for message in messages:
+            self.assertIn(message.level_tag, 'success')
+            self.assertIn(message.message, 'Settings saved')
+        get_resp = self.client.get(reverse('folder-list'))
+        self.assertContains(get_resp, 'has-text-danger')
+
+    def test_clamav_update(self):
+        pre_update_time = Settings.objects.get(pk=1).clamav_last_updated
+        post_resp = self.client.post(reverse('update-clamav-db'), follow=True)
+        self.assertEqual(post_resp.status_code, 200)
+        messages = post_resp.context['messages']
+        self.assertEqual(len(messages), 1)
+        for message in messages:
+            self.assertIn(message.level_tag, 'success')
+            self.assertIn(message.message, 'Updated ClamAV Signature Database')
+        post_update_time = Settings.objects.get(pk=1).clamav_last_updated
+        self.assertGreater(post_update_time, pre_update_time)

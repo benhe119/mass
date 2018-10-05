@@ -27,8 +27,8 @@
       </p>
       <ul class="menu-list">
         <li>
-          <a href="{% url 'clamav-settings' %}">ClamAV
-            {% if clamav_settings.enabled %}
+          <a href="{% url 'settings' 'main' %}">ClamAV
+            {% if settings.clamav_enabled %}
               <span class="icon has-text-success">
                 <i class="fas fa-check-square"></i>
               </span>
@@ -43,7 +43,19 @@
     </aside>
   </div>
   <div class="column is-narrow mass-content">
-      {% block content %}{% endblock %}
+    {% if messages %}
+      <ul class="messages">
+      {% for message in messages %}
+        <article class="message is-{{ message.tags }}">
+          <div class="message-body">
+            {{ message }}
+          </div>
+        </article>
+      {% endfor %}
+      </ul>
+    {% endif %}
+    {% block content %}
+    {% endblock %}
   </div>
 </div>
 </body>

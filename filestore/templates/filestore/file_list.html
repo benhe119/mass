@@ -8,7 +8,7 @@
     <h1>Files</h1>
     <p><a href="{% url 'file-create' %}">Add File</a></p>
     {% if files %}
-    <button class="button is-link is-danger" id="show_delete_modal_btn" disabled>Delete</button>
+    <button class="button is-link is-danger" id="show_delete_modal_btn" disabled>Delete<span class="num_files_selected"></span></button>
     <form action="{% url 'file-list' %}" method="post">
     <div class="modal" id="confirm_delete_modal">
       <div class="modal-background"></div>
@@ -17,7 +17,7 @@
           <p class="modal-card-title">Confirm Deletion</p>
         </header>
         <section class="modal-card-body">
-          Are you sure you want to delete <span id="num_items_selected"></span> files?
+          Are you sure you want to delete these <span class="num_files_selected"></span>
         </section>
         <footer class="modal-card-foot">
           <button class="button is-danger">Confirm Delete</button>
@@ -75,6 +75,8 @@
 document.addEventListener('DOMContentLoaded', function () {
   var rootEl = document.documentElement;
   var num_files = parseInt('{{ files|length }}');
+  var num_files_selected = 0;
+  var num_files_selected_spans = document.getElementsByClassName('num_files_selected');
 
   var show_delete_modal_btn = document.getElementById('show_delete_modal_btn');
   if (show_delete_modal_btn) {
@@ -113,10 +115,20 @@ document.addEventListener('DOMContentLoaded', function () {
   function update_form() {
     if (num_files > 0) {
       var checkedOne = select_all.checked || Array.prototype.slice.call(selected_files).some(x => x.checked);
+      var num_files_text = null;
       if (checkedOne) {
+        num_files_selected = Array.prototype.slice.call(selected_files).filter(x => x.checked).length;
         show_delete_modal_btn.removeAttribute('disabled');
+        num_files_text = '&nbsp;(' + num_files_selected + ') file';
+        if (num_files_selected > 1) {
+          num_files_text += 's';
+        }
       } else {
         show_delete_modal_btn.setAttribute('disabled', '');
+      }
+
+      for (const span of num_files_selected_spans) {
+        span.innerHTML = num_files_text;
       }
     }
   }

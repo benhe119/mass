@@ -1,6 +1,6 @@
 #!/bin/bash
 
-pip install flake8 coverage fakeredis
+pip install -r requirements/test.txt 
 export DJANGO_SETTINGS_MODULE=mass.settings.devel
 find {filestore,mass} -name "__pycache__" | xargs rm -rf
 rm -rf mass/db.sqlite3

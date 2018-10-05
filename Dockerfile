@@ -12,7 +12,8 @@ COPY etc/apt/Release.key etc/apt/Release.key
 
 COPY requirements/base.txt requirements/base.txt
 
-RUN pip install -r requirements/base.txt bro-pkg
+RUN pip install pip --upgrade && \
+    pip install -r requirements/base.txt bro-pkg
 
 RUN apt-key add etc/apt/Release.key && \
     echo 'deb http://download.opensuse.org/repositories/network:/bro/Debian_8.0/ /' >> /etc/apt/sources.list.d/bro.list && \

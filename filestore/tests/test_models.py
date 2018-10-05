@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db.utils import IntegrityError
 from django.test import TransactionTestCase
-from filestore.models import ClamAVSettings, File, Folder
+from filestore.models import Settings, File, Folder
 
 
 class FileTests(TransactionTestCase):
@@ -69,9 +69,9 @@ class FileTests(TransactionTestCase):
 
     def test_clamav_disabled(self):
         """There should be no clamav_msg when it's disabled"""
-        clamav_settings = ClamAVSettings.load()
-        clamav_settings.enabled = False
-        clamav_settings.save()
+        settings = Settings.load()
+        settings.clamav_enabled = False
+        settings.save()
         eicar = File()
         eicar.file_obj = SimpleUploadedFile(
             name='eicar.com.txt',
@@ -80,9 +80,9 @@ class FileTests(TransactionTestCase):
         eicar.save()
         eicar.refresh_from_db()
         self.assertEqual(eicar.clamav_msg, '')
-        clamav_settings = ClamAVSettings.load()
-        clamav_settings.enabled = True
-        clamav_settings.save()
+        settings = Settings.load()
+        settings.clamav_enabled = True
+        settings.save()
 
     def test_delete_nonexistant_file(self):
         File.objects.create(file_obj=SimpleUploadedFile(

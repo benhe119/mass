@@ -10,5 +10,6 @@ urlpatterns = [
     path('folders/add/', views.FolderCreate.as_view(), name='folder-create'),
     path('folders/detail/<str:pk>', views.FolderDetail.as_view(), name='folder-detail'),
     path('folders/delete/<str:pk>', views.FolderDelete.as_view(), name='folder-delete'),
-    path('settings/clamav', views.clamav_settings, name='clamav-settings'),
+    path('settings/<str:slug>', views.SettingsUpdate.as_view(), name='settings'),
+    path('update_clamav_db', views.update_clamav_db, name='update-clamav-db'),
 ]
