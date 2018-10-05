@@ -112,9 +112,9 @@ def update_clamav():
     # Don't judge me for this :P it works!
     freshclam_run = subprocess.run(['freshclam'], stdout=subprocess.PIPE)
     freshclam_out = freshclam_run.stdout.decode('utf-8').split('\n')[1:-1]
-    _main = [line for line in freshclam_out if "main.cvd" in line][0]
-    _daily = [line for line in freshclam_out if "daily.cld" in line][0]
-    _bytecode = [line for line in freshclam_out if "bytecode.cvd" in line][0]
+    _main = [line for line in freshclam_out if "main.c" in line][0]
+    _daily = [line for line in freshclam_out if "daily.c" in line][0]
+    _bytecode = [line for line in freshclam_out if "bytecode.c" in line][0]
     _main = _main[_main.index('version'):].split(', ')
     _daily = _daily[_daily.index('version'):].split(', ')
     _bytecode = _bytecode[_bytecode.index('version'):].split(', ')
