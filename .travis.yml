@@ -15,4 +15,4 @@ script:
   - docker run --rm -it -v `pwd`:/app  mkerins/mass:latest ./run_tests.sh
 
 after_success:
-  - codecov
+  - sudo codecov
