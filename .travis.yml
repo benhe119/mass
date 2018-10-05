@@ -9,7 +9,7 @@ before_install:
   - docker pull mkerins/mass
 
 install:
-  - pip install codecov
+  - sudo pip install codecov
 
 script:
   - docker run --rm -it -v `pwd`:/app  mkerins/mass:latest ./run_tests.sh
