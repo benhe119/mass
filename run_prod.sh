@@ -12,5 +12,5 @@ python manage.py migrate --run-syncdb
 freshclam
 /etc/init.d/clamav-daemon start
 python manage.py loaddata init_data.json
-id
+python manage.py collectstatic --noinput
 python manage.py runserver 0.0.0.0:8000
