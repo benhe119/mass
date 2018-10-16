@@ -1,8 +1,7 @@
 from django import forms
-from .models import ClamAVSettings
+from .models import Settings
 
 
-# TODO: abstract common parts of these forms
 class FileListForm(forms.Form):
 
     # handles operations on multiple Folder records from the file-list page
@@ -25,8 +24,8 @@ class FolderListForm(forms.Form):
             raise forms.ValidationError('Select at least one folder to operate on')
 
 
-class ClamAVSettingsForm(forms.ModelForm):
+class SettingsForm(forms.ModelForm):
 
     class Meta:
-        model = ClamAVSettings
-        fields = ['enabled', ]
+        model = Settings
+        fields = ['clamav_enabled', ]

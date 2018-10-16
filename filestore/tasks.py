@@ -10,8 +10,9 @@ from django.db import IntegrityError, transaction
 from django.db.models.signals import post_save
 from django.core.files import File as _File
 from django.dispatch import receiver
+from django.utils import timezone
 import django_rq
-from filestore.models import File, Folder
+from filestore.models import Settings, File, Folder
 
 LOG = logging.getLogger(__name__)
 q = django_rq.get_queue('default')
@@ -55,7 +56,7 @@ def scan_folder(instance):
     LOG.info('Found %s, added %s, skipped %s duplicates', num_files, num_files, num_duplicates)
     instance.num_files = num_files_added
     if instance.temporary:
-        # Currently only used when bro extracts a PCAP
+        # Used when extracting files from a PCAP or archive
         LOG.info('%s is temporary, deleting', instance.path)
         instance.delete()
     else:
@@ -88,7 +89,7 @@ def extract_file(instance, pcap=False, archive=False):
         LOG.info('Extracting %s to %s', instance.path, temp_dir)
         extract_cmd = f'7z x {instance.path} -aoa -o{temp_dir}'
         LOG.info('Extraction Command: %s', extract_cmd)
-        subprocess.run(extract_cmd, shell=True)
+        subprocess.run(extract_cmd, shell=True, stdout=subprocess.PIPE)
         Folder.objects.create(path=temp_dir, recursive=True, temporary=True)
 
 
@@ -104,3 +105,30 @@ def extract_file_handler(sender, instance, created, **kwargs):
             if archive_type in instance.file_type.lower():
                 q.enqueue(extract_file, instance, archive=True)
                 break
+
+
+def update_clamav():
+    LOG.info('Updating ClamAV signatures')
+    # Don't judge me for this :P it works!
+    freshclam_run = subprocess.run(['freshclam'], stdout=subprocess.PIPE)
+    freshclam_out = freshclam_run.stdout.decode('utf-8').split('\n')[1:-1]
+    _main = [line for line in freshclam_out if "main.c" in line][0]
+    _daily = [line for line in freshclam_out if "daily.c" in line][0]
+    _bytecode = [line for line in freshclam_out if "bytecode.c" in line][0]
+    _main = _main[_main.index('version'):].split(', ')
+    _daily = _daily[_daily.index('version'):].split(', ')
+    _bytecode = _bytecode[_bytecode.index('version'):].split(', ')
+    main_ver, main_sigs = _main[0].split(': ')[1], _main[1].split(': ')[1]
+    daily_ver, daily_sigs = _daily[0].split(': ')[1], _daily[1].split(': ')[1]
+    bytecode_ver, bytecode_sigs = _bytecode[0].split(': ')[1], _bytecode[1].split(': ')[1]
+    # Glad that ugliness is over
+    settings = Settings.objects.get(pk=1)
+    settings.clamav_main_sigs = int(main_sigs)
+    settings.clamav_main_ver = int(main_ver)
+    settings.clamav_daily_sigs = int(daily_sigs)
+    settings.clamav_daily_ver = int(daily_ver)
+    settings.clamav_bytecode_sigs = int(bytecode_sigs)
+    settings.clamav_bytecode_ver = int(bytecode_ver)
+    settings.clamav_last_updated = timezone.now()
+    settings.save()
+    LOG.info('Updated ClamAV signatures')

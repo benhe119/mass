@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+
+{% block content %}
+<div class="content">
+  <h1>Settings</h1>
+  <form action="" method="post" enctype="multipart/form-data">
+  <table class="table is-striped is-hoverable">
+    <tr>
+      <td>Last Updated:</td>
+      <td>{{ settings.clamav_last_updated|naturaltime }}</td>
+    </tr>
+    <tr>
+      <td>main.cvd</td>
+      <td>{{ settings.clamav_main_sigs }} signatures (Version {{ settings.clamav_main_ver }})</td>
+    </tr>
+    <tr>
+      <td>daily.cvd</td>
+      <td>{{ settings.clamav_daily_sigs }} signatures (Version {{ settings.clamav_daily_ver }})</td>
+    </tr>
+    <tr>
+      <td>bytecode.cvd</td>
+      <td>{{ settings.clamav_bytecode_sigs }} signatures (Version {{ settings.clamav_bytecode_ver }})</td>
+    </tr>
+  </table>
+  {% csrf_token %}
+  {{ form }}
+  <div class="field">
+    <a href="{% url 'update-clamav-db' %}" class='button is-link'>Update ClamAV</a>
+  </div>
+  <div class="field">
+      <button class="button is-link" type="submit">Save Settings</button>
+  </div>
+  </form>
+</div>
+{% endblock %}

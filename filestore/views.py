@@ -1,12 +1,16 @@
+from django.contrib import messages
+from django.contrib.messages.views import SuccessMessageMixin
 from django.db.utils import IntegrityError
-from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import DetailView
-from django.views.generic.edit import CreateView, DeleteView, FormView
-from .forms import FileListForm, FolderListForm, ClamAVSettingsForm
-from .models import File, Folder
-from .tasks import extract_file, scan_folder # noqa
+from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
+import django_rq
+from .forms import SettingsForm, FileListForm, FolderListForm
+from .models import Settings, File, Folder
+from .tasks import extract_file, scan_folder, update_clamav # noqa
+
+q = django_rq.get_queue('default')
 
 
 class FileList(FormView):
@@ -25,7 +29,6 @@ class FileList(FormView):
         return context
 
     def post(self, request, *args, **kwargs):
-        # TODO: add confirmation modal
         # selected_files is a list of checkboxes selected
         selected_files = request.POST.getlist('selected_files')
         form = self.get_form(self.form_class)
@@ -38,9 +41,10 @@ class FileList(FormView):
         return redirect(reverse_lazy('file-list'))
 
 
-class FileCreate(CreateView):
+class FileCreate(SuccessMessageMixin, CreateView):
     model = File
     fields = ('file_obj', )
+    success_message = '"%(file_name)s" was added'
     success_url = reverse_lazy('file-list')
 
     def form_valid(self, form):
@@ -50,11 +54,22 @@ class FileCreate(CreateView):
             form.add_error(None, 'Duplicate file')
             return self.form_invalid(form)
 
+    def get_success_message(self, cleaned_data):
+        return self.success_message % dict(
+            cleaned_data, file_name=self.object.file_name,
+        )
 
-class FileDelete(DeleteView):
+
+class FileDelete(SuccessMessageMixin, DeleteView):
     model = File
     slug_field = 'sha256'
+    success_message = '"%(file_name)s" was deleted'
     success_url = reverse_lazy('file-list')
+
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        messages.success(self.request, self.success_message % obj.__dict__)
+        return super(FileDelete, self).delete(request, *args, **kwargs)
 
 
 class FileDetail(DetailView):
@@ -78,24 +93,34 @@ class FolderList(FormView):
         return context
 
     def post(self, request, *args, **kwargs):
-        # TODO: add confirmation modal
+        # selected_folders is a list of checkboxes selected
         selected_folders = request.POST.getlist('selected_folders')
         form = self.get_form(self.form_class)
+        # Return the form if no Folders are selected (error added by FolderListForm)
         if not selected_folders:
             return render(request, self.template_name, {'form': form, 'folders': self.get_queryset()})
-        # TODO: probably can replace this with bulk delete
+        # Delete the Folder records one at a time
         for obj in Folder.objects.filter(pk__in=request.POST.getlist('selected_folders')):
             obj.delete()
         return redirect(reverse_lazy('folder-list'))
 
 
-class FolderCreate(CreateView):
+class FolderCreate(SuccessMessageMixin, CreateView):
     model = Folder
     fields = ('path', 'recursive', )
+    success_message = '"%(path)s" was added'
     success_url = reverse_lazy('folder-list')
 
+    def form_valid(self, form):
+        return super().form_valid(form)
 
-class FolderDelete(DeleteView):
+    def get_success_message(self, cleaned_data):
+        return self.success_message % dict(
+            cleaned_data, file_name=self.object.path,
+        )
+
+
+class FolderDelete(SuccessMessageMixin, DeleteView):
     model = Folder
     success_url = reverse_lazy('folder-list')
 
@@ -104,15 +129,18 @@ class FolderDetail(DetailView):
     model = Folder
 
 
-def clamav_settings(request):
-    form = ClamAVSettingsForm(request.POST or None)
+class SettingsUpdate(SuccessMessageMixin, UpdateView):
+    model = Settings
+    slug_field = 'name'
+    form_class = SettingsForm
+    success_message = 'Settings saved'
 
-    if request.method == 'POST':
-        if form.is_valid():
-            form.save()
-        else:
-            return HttpResponse('Error!')
+    @staticmethod
+    def get_queryset():
+        return Settings.objects.filter(pk=1)
 
-    context = {'form': form}
 
-    return render(request, 'filestore/clamav_settings.html', context)
+def update_clamav_db(request):
+    q.enqueue(update_clamav)
+    messages.success(request, 'Updated ClamAV Signature Database')
+    return redirect(reverse_lazy('settings', kwargs={'slug': 'main'}))

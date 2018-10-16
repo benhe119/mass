@@ -12,3 +12,6 @@ bro/tmp
 .tox
 htmlcov
 etc/clamav/*.cvd
+static/
+coverage.xml
+

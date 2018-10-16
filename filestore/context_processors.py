@@ -1,4 +1,4 @@
-from .models import File, Folder, ClamAVSettings
+from .models import File, Folder, Settings
 
 
 def object_counts(request):
@@ -10,4 +10,5 @@ def object_counts(request):
 
 
 def clamav_settings(request):
-    return {'clamav_settings': ClamAVSettings.load()}
+    """Returns the settings record"""
+    return {'settings': Settings.load()}

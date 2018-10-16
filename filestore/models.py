@@ -16,6 +16,7 @@ try:
 except ImportError:
     import sys
     LOG.error('ERROR: Cannot find magic library')
+    # No real reason to continue without libmagic
     sys.exit(1)
 
 
@@ -68,20 +69,28 @@ class SettingsModel(models.Model):
 
     @classmethod
     def load(cls):
+        # Check if the record is in the cache ...
         if cache.get(cls.__name__) is None:
             obj, created = cls.objects.get_or_create(pk=1)
             if not created:
+                # ... it's not! so cache it
                 obj.set_cache()
         return cache.get(cls.__name__)
 
 
-class ClamAVSettings(SettingsModel):
-    enabled = models.BooleanField(default=True)
+class Settings(SettingsModel):
+    name = models.CharField(max_length=25, editable=False)
+    clamav_enabled = models.BooleanField(default=True)
+    clamav_last_updated = models.DateTimeField(null=True)
+    clamav_main_sigs = models.IntegerField(null=True)
+    clamav_main_ver = models.IntegerField(null=True)
+    clamav_daily_sigs = models.IntegerField(null=True)
+    clamav_daily_ver = models.IntegerField(null=True)
+    clamav_bytecode_sigs = models.IntegerField(null=True)
+    clamav_bytecode_ver = models.IntegerField(null=True)
 
-    def __str__(self):
-        if self.enabled:
-            return 'ClamAV Enabled'
-        return 'ClamAV Disabled'
+    def get_absolute_url(self):
+        return reverse('settings', kwargs={'slug': 'main'})
 
 
 class File(models.Model):
@@ -107,7 +116,8 @@ class File(models.Model):
             # Pass the file handle/pointer to calculate checksums and get filetype.
             #   This should be (much?) faster than using disk I/O
             self.md5, self.sha1, self.sha256, self.file_type = self.get_file_info(self.file_obj.file)
-            if ClamAVSettings.load().enabled:
+            # ClamAV has a default file size limit of 25 MB
+            if Settings.load().clamav_enabled and self.size < 25000000:
                 self.clamav_msg = self.clamav_scan(self.file_obj.file, self.file_name)
             self.time_to_process = int((dt.now() - _proc_start).total_seconds() * 1000)
             self.path = get_upload_path(self, None)
@@ -140,6 +150,7 @@ class File(models.Model):
     def clamav_scan(self, file_obj, file_name):
         cd = self._connect_clamd()
         if cd:
+            # Go to the beginning of the file
             file_obj.seek(0)
             try:
                 clam_results = cd.scan_stream(file_obj.read())
