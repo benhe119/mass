@@ -13,4 +13,5 @@ bro/tmp
 htmlcov
 etc/clamav/*.cvd
 static/
+coverage.xml
 
