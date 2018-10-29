@@ -111,9 +111,6 @@ class FolderCreate(SuccessMessageMixin, CreateView):
     success_message = '"%(path)s" was added'
     success_url = reverse_lazy('folder-list')
 
-    def form_valid(self, form):
-        return super().form_valid(form)
-
     def get_success_message(self, cleaned_data):
         return self.success_message % dict(
             cleaned_data, file_name=self.object.path,

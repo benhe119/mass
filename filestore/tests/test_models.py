@@ -56,6 +56,25 @@ class FileTests(TransactionTestCase):
         with self.assertRaises(IntegrityError):
             bash_macosx_dup.save()
 
+    def test_delete_nonexistant_file(self):
+        File.objects.create(file_obj=SimpleUploadedFile(
+            name='file1', content=b'1234', content_type='application/octet-stream'))
+        file1 = File.objects.get(file_name='file1')
+        shutil.rmtree('/'.join(file1.path.split('/')[0:2]))
+        file1.delete()
+
+    def test_member_files(self):
+        File.objects.create(file_obj=SimpleUploadedFile(
+            name='some_other_txt_files.tar',
+            content=open('filestore/examples/some_other_txt_files.tar', 'rb').read(),
+            content_type='application/octet-stream')
+        )
+        source_file = File.objects.get(file_name='some_other_txt_files.tar')
+        self.assertEqual(source_file.member_files_count, 2)
+
+
+class ClamAVTests(TransactionTestCase):
+
     def test_clamav_file(self):
         """ClamAV should hit on the test EICAR file"""
         eicar = File()
@@ -83,14 +102,6 @@ class FileTests(TransactionTestCase):
         settings = Settings.load()
         settings.clamav_enabled = True
         settings.save()
-
-    def test_delete_nonexistant_file(self):
-        File.objects.create(file_obj=SimpleUploadedFile(
-            name='file1', content=b'1234', content_type='application/octet-stream'))
-        file1 = File.objects.get(file_name='file1')
-        print('file1.path', file1.path)
-        shutil.rmtree('/'.join(file1.path.split('/')[0:2]))
-        file1.delete()
 
 
 class FolderTests(TransactionTestCase):

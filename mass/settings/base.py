@@ -45,6 +45,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'mass.urls'
@@ -150,11 +151,10 @@ RQ_QUEUES = {
     }
 }
 
+# TODO: Add these to Settings object
 # Allow operating on more than 1000 objects at a time
 DATA_UPLOAD_MAX_NUMBER_FIELDS = None
-
 PCAP_STRINGS = ['tcpdump', 'pcap']
-
 ARCHIVE_TYPES = ['zip', 'tar', 'gzip']
 
 LOGGING = {

@@ -71,10 +71,14 @@ class FileViewTests(TestCase):
 
     def test_file_archive_extraction(self):
         archive = SimpleUploadedFile(
-            name='some_txt_files.tar.gz',
-            content=open('filestore/examples/some_txt_files.tar.gz', 'rb').read(),
+            name='some_other_txt_files.tar',
+            content=open('filestore/examples/some_other_txt_files.tar', 'rb').read(),
             content_type='application/octet-stream')
         resp = self.client.post(reverse('file-create'), {'file_obj': archive})
+        archive_record = File.objects.get(file_name='some_other_txt_files.tar')
+        self.assertEqual(archive_record.member_files.count(), 2)
+        all_files = File.objects.all()
+        self.assertIsNone(archive_record.source_file)
         self.assertEqual(resp.status_code, 302)
 
 
@@ -135,16 +139,16 @@ class FolderViewTests(TestCase):
 
     def test_file_delete_multiple_success(self):
         """Test deleting 1 of 2 Folder records using checkboxes"""
-        Folder.objects.create(path='filestore/tests/data', recursive=False)
-        Folder.objects.create(path='filestore/tests/data/sub_dir', recursive=False)
+        Folder.objects.create(path='filestore/tests/data', recursive=False, source_file=None)
+        Folder.objects.create(path='filestore/tests/data/sub_dir', recursive=False, source_file=None)
         resp = self.client.post(reverse('folder-list'), {'selected_folders': ['1']})
         self.assertEqual(resp.status_code, 302)
         self.assertEqual(Folder.objects.count(), 1)
 
     def test_folder_delete_multiple_failure(self):
         """Clicking delete when no file checkboxes are selected should fail"""
-        Folder.objects.create(path='filestore/tests/data', recursive=False)
-        Folder.objects.create(path='filestore/tests/data/sub_dir', recursive=False)
+        Folder.objects.create(path='filestore/tests/data', recursive=False, source_file=None)
+        Folder.objects.create(path='filestore/tests/data/sub_dir', recursive=False, source_file=None)
         resp = self.client.post(reverse('folder-list'), {'selected_folders': []})
         self.assertContains(resp, 'errorlist')
         self.assertEqual(Folder.objects.count(), 2)
@@ -178,4 +182,4 @@ class SettingsViewTests(TestCase):
             self.assertIn(message.level_tag, 'success')
             self.assertIn(message.message, 'Updated ClamAV Signature Database')
         post_update_time = Settings.objects.get(pk=1).clamav_last_updated
-        self.assertGreater(post_update_time, pre_update_time)
+        self.assertGreaterEqual(post_update_time, pre_update_time)

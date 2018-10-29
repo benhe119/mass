@@ -42,11 +42,15 @@ def scan_folder(instance):
                 LOG.warning('Permission denied: %s', file_rec)
                 break
             file_rec.file_obj = _File(_file)
+            source_file_msg = ''
+            if instance.source_file:
+                file_rec.source_file = instance.source_file
+                source_file_msg = f'(source file {file_rec.source_file.file_name}'
             # Don't add duplicates files (based on SHA256)
             try:
                 with transaction.atomic():
                     file_rec.save()
-                LOG.info('Saved new file: %s %s', file_rec, file_rec.sha256)
+                LOG.info('Saved new file: %s %s %s', file_rec, file_rec.sha256, source_file_msg)
             except IntegrityError:
                 LOG.info('%s %s already exists', file_rec, file_rec.sha256)
                 # Update counters
@@ -70,19 +74,14 @@ def scan_folder_handler(sender, instance, created, **kwargs):
         q.enqueue(scan_folder, instance)
 
 
-def extract_file(instance, pcap=False, archive=False):
+def extract_file(instance, pcap=False, archive=False, source_file=None):
     if pcap:
-        try:
-            subprocess.run(['which', 'bro'], check=True)
-        except subprocess.CalledProcessError:
-            LOG.error('Cannot find bro')
-            raise
         LOG.info('Extacting PCAP %s', instance.path)
         shutil.rmtree('bro/tmp', ignore_errors=True)
         os.mkdir('bro/tmp')
         extract_cmd_str = f'bro -C -r ../../{instance.path} ../plugins/extract-all-files.bro'
         subprocess.run(extract_cmd_str, shell=True, cwd='bro/tmp')
-        Folder.objects.create(path='bro/tmp/extract_files', temporary=True)
+        Folder.objects.create(path='bro/tmp/extract_files', temporary=True, source_file=instance)
 
     if archive:
         temp_dir = tempfile.mkdtemp()
@@ -90,7 +89,7 @@ def extract_file(instance, pcap=False, archive=False):
         extract_cmd = f'7z x {instance.path} -aoa -o{temp_dir}'
         LOG.info('Extraction Command: %s', extract_cmd)
         subprocess.run(extract_cmd, shell=True, stdout=subprocess.PIPE)
-        Folder.objects.create(path=temp_dir, recursive=True, temporary=True)
+        Folder.objects.create(path=temp_dir, recursive=True, temporary=True, source_file=instance)
 
 
 @receiver(post_save, sender=File)
@@ -99,11 +98,11 @@ def extract_file_handler(sender, instance, created, **kwargs):
     if created and instance.file_type is not None:
         for pcap_str in settings.PCAP_STRINGS:
             if pcap_str in instance.file_type:
-                q.enqueue(extract_file, instance, pcap=True)
+                q.enqueue(extract_file, instance, pcap=True, source_file=instance)
                 break
         for archive_type in settings.ARCHIVE_TYPES:
             if archive_type in instance.file_type.lower():
-                q.enqueue(extract_file, instance, archive=True)
+                q.enqueue(extract_file, instance, archive=True, source_file=instance)
                 break
 
 
