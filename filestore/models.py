@@ -7,17 +7,10 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.utils import IntegrityError
 from django.urls import reverse
+import magic
 import pyclamd
 
 LOG = logging.getLogger(__name__)
-
-try:
-    import magic
-except ImportError:
-    import sys
-    LOG.error('ERROR: Cannot find magic library')
-    # No real reason to continue without libmagic
-    sys.exit(1)
 
 
 def get_upload_path(instance, filename):
@@ -89,12 +82,16 @@ class Settings(SettingsModel):
     clamav_bytecode_sigs = models.IntegerField(null=True)
     clamav_bytecode_ver = models.IntegerField(null=True)
 
-    def get_absolute_url(self):
+    @staticmethod
+    def get_absolute_url():
         return reverse('settings', kwargs={'slug': 'main'})
 
 
 class File(models.Model):
     """Record of files added, size, type, hashes and disk path"""
+    source_file = models.ForeignKey(
+        'self', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='member_files', related_query_name='member_file')
     file_obj = models.FileField(upload_to=get_upload_path, editable=True)
     file_name = models.CharField(max_length=250, editable=False)
     file_type = models.CharField(max_length=100, editable=False, null=True)
@@ -187,6 +184,10 @@ class File(models.Model):
             sha256.update(chunk)
         return (md5.hexdigest(), sha1.hexdigest(), sha256.hexdigest(), file_type)
 
+    @property
+    def member_files_count(self):
+        return self.member_files.count()
+
     def get_absolute_url(self):
         return reverse('file-detail', kwargs={'slug': self.sha256})
 
@@ -200,6 +201,7 @@ class Folder(models.Model):
     num_files = models.PositiveIntegerField(editable=False, default=0)
     recursive = models.BooleanField(default=False)
     temporary = models.BooleanField(default=False, editable=False)
+    source_file = models.ForeignKey(File, null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         # Same path can be added as recursive and non-recursive

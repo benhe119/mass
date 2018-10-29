@@ -3,6 +3,12 @@
 {% block content %}
 <section>
 <table class="table is-striped is-hoverable">
+  {% if file.source_file %}
+  <tr>
+    <td>Source File:</td>
+    <td><a href="{% url 'file-detail' file.source_file.sha256 %}">{{ file.source_file }}</a></td>
+  </tr>
+  {% endif %}
   <tr>
     <td>File Name:</td>
     <td>{{ file.file_name }}</td>
@@ -35,6 +41,14 @@
     <td>Added:</td>
     <td>{{ file.added|date:"Y-m-d H:i:s" }}</td>
   </tr>
+  {% with member_files_count=file.member_files_count %}
+    {% if member_files_count > 0 %}
+    <tr>
+      <td>Number of extracted files:</td>
+      <td>{{ member_files_count }}</td>
+    </tr>
+    {% endif %}
+  {% endwith %}
 </table>
 <a href="{% url 'file-delete' file.sha256 %}">Delete</a>
 </section>
