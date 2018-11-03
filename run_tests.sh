@@ -6,7 +6,6 @@ find {filestore,mass} -name "__pycache__" | xargs rm -rf
 rm -rf mass/db.sqlite3
 rm -rf files/*
 rm -rf */migrations/*
-rm -rf static/*
 cp etc/clamav/*.cvd /var/lib/clamav/
 chown -R clamav:clamav /var/lib/clamav
 python manage.py makemigrations filestore

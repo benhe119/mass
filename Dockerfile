@@ -17,9 +17,10 @@ RUN pip install pip --upgrade && \
 
 RUN apt-key add etc/apt/Release.key && \
     echo 'deb http://download.opensuse.org/repositories/network:/bro/Debian_8.0/ /' >> /etc/apt/sources.list.d/bro.list && \
-    apt-get update && apt-get install -y bro supervisor p7zip-full clamav-daemon clamdscan netcat-openbsd
+    apt-get update && apt-get install -y bro supervisor p7zip-full clamav-daemon clamdscan netcat-openbsd nginx
 
-RUN useradd -s /bin/bash django_rq && \
-    mkdir -p /etc/supervisor/conf.d/
+RUN mkdir -p /etc/supervisor/conf.d/
 
-COPY django_rq.conf /etc/supervisor/conf.d/
+COPY etc/supervisord/conf.d/* /etc/supervisor/conf.d/
+
+COPY etc/nginx/nginx.conf /etc/nginx/nginx.conf
