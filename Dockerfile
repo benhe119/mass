@@ -17,7 +17,7 @@ RUN pip install pip --upgrade && \
 
 RUN apt-key add etc/apt/Release.key && \
     echo 'deb http://download.opensuse.org/repositories/network:/bro/Debian_8.0/ /' >> /etc/apt/sources.list.d/bro.list && \
-    apt-get update && apt-get install -y bro supervisor p7zip-full clamav-daemon clamdscan netcat-openbsd nginx
+    apt-get update && apt-get install -y bro curl supervisor p7zip-full clamav-daemon clamdscan netcat-openbsd nginx
 
 RUN mkdir -p /etc/supervisor/conf.d/
 

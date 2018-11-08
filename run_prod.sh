@@ -12,4 +12,5 @@ freshclam
 /etc/init.d/clamav-daemon start
 python manage.py loaddata init_data.json
 python manage.py collectstatic --noinput
+curl -s -o /dev/null -w "%{http_code}" -L http://localhost:8000/update_clamav_db
 supervisord -c /etc/supervisor/supervisord.conf -n

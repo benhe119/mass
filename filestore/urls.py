@@ -2,7 +2,8 @@ from django.urls import path
 from filestore import views
 
 urlpatterns = [
-    path('', views.FileList.as_view(), name='file-list'),
+    path('', views.index, name='index'),
+    path('files/', views.FileList.as_view(), name='file-list'),
     path('add/', views.FileCreate.as_view(), name='file-create'),
     path('detail/<str:slug>', views.FileDetail.as_view(), name='file-detail'),
     path('delete/<str:slug>', views.FileDelete.as_view(), name='file-delete'),

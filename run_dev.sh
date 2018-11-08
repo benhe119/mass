@@ -14,4 +14,5 @@ freshclam
 /etc/init.d/clamav-daemon start
 rm -rf debug.log
 python manage.py loaddata init_data.json
+curl -s -o /dev/null -w "%{http_code}" -L http://localhost:8000/update_clamav_db
 python manage.py runserver 0.0.0.0:8000
