@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.utils import IntegrityError
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
@@ -13,18 +14,26 @@ from .tasks import extract_file, scan_folder, update_clamav # noqa
 q = django_rq.get_queue('default')
 
 
+def index(request):
+    return redirect(reverse_lazy('file-list'))
+
+
 class FileList(FormView):
     model = File
     form_class = FileListForm
     template_name = 'filestore/file_list.html'
 
-    @staticmethod
-    def get_queryset():
-        return File.objects.all()
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['files'] = self.get_queryset()
+        file_list = File.objects.all()
+        paginator = Paginator(file_list, 25)
+        page = self.request.GET.get('page', 1)
+        try:
+            context['files'] = paginator.page(page)
+        except PageNotAnInteger:
+            context['files'] = paginator.page(1)
+        except EmptyPage:
+            context['files'] = paginator.page(paginator.num_pages)
         context['form'] = self.get_form(self.form_class)
         return context
 
@@ -34,7 +43,7 @@ class FileList(FormView):
         form = self.get_form(self.form_class)
         # Return the form if no Files are selected (error added by FileListForm)
         if not selected_files:
-            return render(request, self.template_name, {'form': form, 'files': self.get_queryset()})
+            return render(request, self.template_name, {'form': form})
         # Can't use bulk delete, need File.delete() to run to clean up files
         for obj in File.objects.filter(pk__in=request.POST.getlist('selected_files')):
             obj.delete()
@@ -82,13 +91,17 @@ class FolderList(FormView):
     form_class = FolderListForm
     template_name = 'filestore/folder_list.html'
 
-    @staticmethod
-    def get_queryset():
-        return Folder.objects.all()
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['folders'] = self.get_queryset()
+        folder_list = Folder.objects.all()
+        paginator = Paginator(folder_list, 25)
+        page = self.request.GET.get('page', 1)
+        try:
+            context['folders'] = paginator.page(page)
+        except PageNotAnInteger:
+            context['folders'] = paginator.page(1)
+        except EmptyPage:
+            context['folders'] = paginator.page(paginator.num_pages)
         context['form'] = self.get_form(self.form_class)
         return context
 
@@ -98,7 +111,7 @@ class FolderList(FormView):
         form = self.get_form(self.form_class)
         # Return the form if no Folders are selected (error added by FolderListForm)
         if not selected_folders:
-            return render(request, self.template_name, {'form': form, 'folders': self.get_queryset()})
+            return render(request, self.template_name, {'form': form})
         # Delete the Folder records one at a time
         for obj in Folder.objects.filter(pk__in=request.POST.getlist('selected_folders')):
             obj.delete()

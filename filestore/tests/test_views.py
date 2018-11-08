@@ -17,9 +17,21 @@ class FileViewTests(TestCase):
             except FileNotFoundError:
                 pass
 
-    def test_file_list_view(self):
-        resp = self.client.get(reverse('file-list'))
-        self.assertEqual(resp.status_code, 200)
+    def test_index_page_redirects_to_files(self):
+        resp = self.client.get(reverse('index'))
+        self.assertEqual(resp.status_code, 302)
+
+    def test_file_list_view_pagination(self):
+        page_nums = []
+        resp = self.client.get(reverse('file-list'), {'page': 10})
+        page_nums.append(resp.context_data.get('files').number)
+        resp = self.client.get(reverse('file-list'), {'page': 'notanumber'})
+        page_nums.append(resp.context_data.get('files').number)
+        resp = self.client.get(reverse('file-list'), {'page': None})
+        page_nums.append(resp.context_data.get('files').number)
+        resp = self.client.get(reverse('file-list'), {'page': -1})
+        page_nums.append(resp.context_data.get('files').number)
+        self.assertTrue(all(x == 1 for x in page_nums))
 
     def test_file_add_view_error(self):
         """Shouldn't be able to create a File record without uploading a file"""
@@ -105,9 +117,17 @@ class FolderViewTests(TestCase):
             except FileNotFoundError:
                 pass
 
-    def test_folder_list_view(self):
-        resp = self.client.get(reverse('folder-list'))
-        self.assertEqual(resp.status_code, 200)
+    def test_folder_list_view_pagination(self):
+        page_nums = []
+        resp = self.client.get(reverse('folder-list'), {'page': 10})
+        page_nums.append(resp.context_data.get('folders').number)
+        resp = self.client.get(reverse('folder-list'), {'page': 'notanumber'})
+        page_nums.append(resp.context_data.get('folders').number)
+        resp = self.client.get(reverse('folder-list'), {'page': None})
+        page_nums.append(resp.context_data.get('folders').number)
+        resp = self.client.get(reverse('folder-list'), {'page': -1})
+        page_nums.append(resp.context_data.get('folders').number)
+        self.assertTrue(all(x == 1 for x in page_nums))
 
     def test_folder_add_view_empty_path(self):
         """Shouldn't be able to create a Folder record with no path"""

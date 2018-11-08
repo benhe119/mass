@@ -194,6 +194,9 @@ class File(models.Model):
     def __str__(self):
         return '{} ({})'.format(self.file_name, self.file_type)
 
+    class Meta:
+        ordering = ['file_name']
+
 
 class Folder(models.Model):
     """Record of folders scanned"""
@@ -222,3 +225,6 @@ class Folder(models.Model):
 
     def __str__(self):
         return self.path
+    
+    class Meta:
+        ordering = ['path']
